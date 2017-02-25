@@ -8,6 +8,9 @@ namespace FileHistoryStandalone
 {
     static class Program
     {
+        internal static Repository Repo = null;
+        internal static DocLibrary DocLib = null;
+
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
