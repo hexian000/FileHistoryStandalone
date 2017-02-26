@@ -40,7 +40,13 @@
             this.TxtDoc = new System.Windows.Forms.TextBox();
             this.BtnFind = new System.Windows.Forms.Button();
             this.OfdFind = new System.Windows.Forms.OpenFileDialog();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.另存为AToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.删除DToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.SfdSaveAs = new System.Windows.Forms.SaveFileDialog();
+            this.BtnTrim = new System.Windows.Forms.Button();
             this.StatusStripDefault.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // StatusStripDefault
@@ -80,6 +86,7 @@
             this.LvwFiles.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
             this.columnHeader2});
+            this.LvwFiles.ContextMenuStrip = this.contextMenuStrip1;
             this.LvwFiles.FullRowSelect = true;
             this.LvwFiles.Location = new System.Drawing.Point(12, 41);
             this.LvwFiles.MultiSelect = false;
@@ -138,11 +145,53 @@
             this.BtnFind.UseVisualStyleBackColor = true;
             this.BtnFind.Click += new System.EventHandler(this.BtnFind_Click);
             // 
+            // OfdFind
+            // 
+            this.OfdFind.Filter = "所有文件|*.*";
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.另存为AToolStripMenuItem,
+            this.删除DToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(138, 48);
+            // 
+            // 另存为AToolStripMenuItem
+            // 
+            this.另存为AToolStripMenuItem.Name = "另存为AToolStripMenuItem";
+            this.另存为AToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.另存为AToolStripMenuItem.Text = "另存为(&A)...";
+            this.另存为AToolStripMenuItem.Click += new System.EventHandler(this.另存为AToolStripMenuItem_Click);
+            // 
+            // 删除DToolStripMenuItem
+            // 
+            this.删除DToolStripMenuItem.Name = "删除DToolStripMenuItem";
+            this.删除DToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.删除DToolStripMenuItem.Text = "删除(&D)";
+            this.删除DToolStripMenuItem.Click += new System.EventHandler(this.删除DToolStripMenuItem_Click);
+            // 
+            // SfdSaveAs
+            // 
+            this.SfdSaveAs.Filter = "所有文件|*.*";
+            // 
+            // BtnTrim
+            // 
+            this.BtnTrim.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.BtnTrim.Location = new System.Drawing.Point(367, 315);
+            this.BtnTrim.Name = "BtnTrim";
+            this.BtnTrim.Size = new System.Drawing.Size(155, 23);
+            this.BtnTrim.TabIndex = 7;
+            this.BtnTrim.Text = "删除所有冗余版本";
+            this.BtnTrim.UseVisualStyleBackColor = true;
+            this.BtnTrim.Click += new System.EventHandler(this.BtnTrim_Click);
+            // 
             // FrmManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(632, 363);
+            this.Controls.Add(this.BtnTrim);
             this.Controls.Add(this.BtnFind);
             this.Controls.Add(this.TxtDoc);
             this.Controls.Add(this.BtnHide);
@@ -156,6 +205,7 @@
             this.Shown += new System.EventHandler(this.FrmManager_Shown);
             this.StatusStripDefault.ResumeLayout(false);
             this.StatusStripDefault.PerformLayout();
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -174,6 +224,11 @@
         private System.Windows.Forms.TextBox TxtDoc;
         private System.Windows.Forms.Button BtnFind;
         private System.Windows.Forms.OpenFileDialog OfdFind;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem 另存为AToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 删除DToolStripMenuItem;
+        private System.Windows.Forms.SaveFileDialog SfdSaveAs;
+        private System.Windows.Forms.Button BtnTrim;
     }
 }
 

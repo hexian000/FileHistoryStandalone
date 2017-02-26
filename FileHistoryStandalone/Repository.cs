@@ -9,20 +9,6 @@ namespace FileHistoryStandalone
 {
     class Repository
     {
-        public class DocFile
-        {
-            private List<RepoFile> backups;
-
-            internal DocFile(List<RepoFile> repoFiles)
-            {
-                backups = repoFiles;
-                FullName = repoFiles[0].Source;
-            }
-
-            public readonly string FullName;
-            public IEnumerable<RepoFile> EnumrateBackups() => backups;
-        }
-
         public class RepoFile
         {
             internal RepoFile(FileInfo file, int repoPathLen)
@@ -46,7 +32,19 @@ namespace FileHistoryStandalone
         }
 
         private string RepoPath;
+        private long RepoSize, RepoMaxSize;
         private Dictionary<string, List<RepoFile>> Files;
+
+        public long Size { get { return RepoSize; } }
+        public long MaxSize
+        {
+            get { return RepoMaxSize; }
+            set
+            {
+                if (value < RepoSize) Trim(RepoSize - value);
+                RepoMaxSize = value;
+            }
+        }
 
         public event EventHandler<string> CopyMade;
 
@@ -79,9 +77,11 @@ namespace FileHistoryStandalone
                 if (f != null) yield return f;
             }
         }
+
         private Repository(string repoPath)
         {
             RepoPath = repoPath;
+            RepoSize = 0; RepoMaxSize = long.MaxValue;
             Files = new Dictionary<string, List<RepoFile>>();
         }
 
@@ -102,10 +102,14 @@ namespace FileHistoryStandalone
         private void AddRepoFile(RepoFile file)
         {
             string src = file.Source.ToLowerInvariant();
-            if (Files.ContainsKey(src))
-                Files[src].Add(file);
-            else
-                Files.Add(src, new List<RepoFile>(new RepoFile[] { file }));
+            lock (Files)
+            {
+                if (Files.ContainsKey(src))
+                    Files[src].Add(file);
+                else
+                    Files.Add(src, new List<RepoFile>(new RepoFile[] { file }));
+            }
+            RepoSize += file.Length;
         }
 
         public int FileCount => Files.Count;
@@ -116,13 +120,12 @@ namespace FileHistoryStandalone
             if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
             else if (source.StartsWith(@"\\")) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
             else throw new ArgumentException("不支持的路径格式", nameof(source));
-            lock (Files)
-            {
-                Directory.CreateDirectory(dir);
-                string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
-                File.Copy(@"\\?\" + source, @"\\?\" + newPath);
-                AddRepoFile(new RepoFile(new FileInfo(@"\\?\" + newPath), RepoPath.Length));
-            }
+            long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
+            if (sizeOverflow > 0) Trim(sizeOverflow);
+            Directory.CreateDirectory(dir);
+            string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
+            File.Copy(@"\\?\" + source, @"\\?\" + newPath);
+            AddRepoFile(new RepoFile(new FileInfo(@"\\?\" + newPath), RepoPath.Length));
             CopyMade?.Invoke(this, source);
         }
 
@@ -130,23 +133,13 @@ namespace FileHistoryStandalone
         public DateTime GetLatestCopyTimeUtc(string source)
         {
             DateTime? Latest = null;
-            foreach (var i in Files[source])
-            {
-                if (Latest == null) Latest = i.LastModifiedTimeUtc;
-                else if (Latest.Value < i.LastModifiedTimeUtc) Latest = i.LastModifiedTimeUtc;
-            }
+            lock (Files)
+                foreach (var i in Files[source])
+                {
+                    if (Latest == null) Latest = i.LastModifiedTimeUtc;
+                    else if (Latest.Value < i.LastModifiedTimeUtc) Latest = i.LastModifiedTimeUtc;
+                }
             return Latest.Value;
-        }
-
-        public List<DocFile> Navigate(string docPath)
-        {
-            List<DocFile> ret = new List<DocFile>();
-            docPath = docPath.ToLowerInvariant();
-            foreach (var i in Files.Keys)
-            {
-                if (Path.GetDirectoryName(i) == docPath) ret.Add(new DocFile(Files[i]));
-            }
-            return ret;
         }
 
         public IEnumerable<RepoFile> FindVersions(string docPath) => Files[docPath.ToLowerInvariant()];
@@ -155,11 +148,15 @@ namespace FileHistoryStandalone
         {
             File.Delete(@"\\?\" + version.FullName);
             string id = version.Source.ToLowerInvariant();
-            List<RepoFile> vers = Files[id];
-            if (vers.Count == 1)
-                Files.Remove(id);
-            else
-                vers.Remove(version);
+            lock (Files)
+            {
+                List<RepoFile> vers = Files[id];
+                if (vers.Count == 1)
+                    Files.Remove(id);
+                else
+                    vers.Remove(version);
+            }
+            RepoSize -= version.Length;
         }
         public void SaveAs(RepoFile file, string to, bool overwrite = false) => File.Copy(file.FullName, to, overwrite);
 
@@ -167,6 +164,11 @@ namespace FileHistoryStandalone
         {
             foreach (var i in Files[source])
                 yield return i.LastModifiedTimeUtc;
+        }
+
+        public void Trim()
+        {
+            Trim((file) => true);
         }
 
         public void Trim(long spaceNeeded)
@@ -182,9 +184,8 @@ namespace FileHistoryStandalone
 
         private void Trim(Func<RepoFile, bool> condition, long spaceNeeded = -1)
         {
+            List<RepoFile> dupFiles = new List<RepoFile>();
             lock (Files)
-            {
-                List<RepoFile> dupFiles = new List<RepoFile>();
                 foreach (var i in Files)
                 {
                     DateTime? Latest = null;
@@ -196,23 +197,20 @@ namespace FileHistoryStandalone
                     foreach (var j in i.Value)
                         if (Latest.Value != j.LastModifiedTimeUtc) dupFiles.Add(j);
                 }
-                dupFiles.Sort((x, y) => Math.Sign((x.LastModifiedTimeUtc - y.LastModifiedTimeUtc).Ticks));
-                List<RepoFile> survivor = new List<RepoFile>();
-                long lenTotal = 0;
-                foreach (var i in dupFiles)
+            dupFiles.Sort((x, y) => Math.Sign((x.LastModifiedTimeUtc - y.LastModifiedTimeUtc).Ticks));
+            long lenTotal = 0;
+            foreach (var i in dupFiles)
+            {
+                if (condition(i))
                 {
-                    if (condition(i))
-                    {
-                        lenTotal += i.Length;
-                        File.Delete(@"\\?\" + i.FullName);
-                        Files[i.Source.ToLowerInvariant()].Remove(i);
-                    }
-                    else survivor.Add(i);
-                    if (spaceNeeded > 0)
-                        if (lenTotal >= spaceNeeded) break;
+                    lenTotal += i.Length;
+                    try { DeleteVersion(i); }
+                    catch { }
                 }
-                dupFiles = null;
+                if (spaceNeeded > 0)
+                    if (lenTotal >= spaceNeeded) break;
             }
+            dupFiles = null;
         }
     }
 }

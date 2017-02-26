@@ -72,17 +72,45 @@ namespace FileHistoryStandalone
                 var vers = Program.Repo.FindVersions(file);
                 foreach (var ver in vers)
                 {
-                    var it = new ListViewItem(ver.LastModifiedTimeUtc.ToString());
+                    var it = new ListViewItem(ver.LastModifiedTimeUtc.ToLocalTime().ToString());
                     it.SubItems.Add(ver.Length.ToString() + "字节");
+                    it.Tag = ver;
                     LvwFiles.Items.Add(it);
                 }
                 LvwFiles.EndUpdate();
             }
         }
 
+        private void 另存为AToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem it in LvwFiles.SelectedItems)
+                if (it.Tag is Repository.RepoFile ver)
+                {
+                    if (SfdSaveAs.ShowDialog() == DialogResult.OK)
+                        Program.Repo.SaveAs(ver, SfdSaveAs.FileName, true);
+                    break;
+                }
+        }
+
+        private void 删除DToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem it in LvwFiles.SelectedItems)
+                if (it.Tag is Repository.RepoFile ver)
+                {
+                    if (MessageBox.Show(this, "确实要删除这个版本吗？", Application.ProductName,
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                        MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                    {
+                        Program.Repo.DeleteVersion(ver);
+                        LvwFiles.Items.Remove(it);
+                    }
+                    break;
+                }
+        }
+
         private void Repo_CopyMade(object sender, string e)
         {
-            StatusStripDefault.BeginInvoke(new Action(() => TsslStatus.Text = "已备份 " + e));
+            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) => TsslStatus.Text = $"[{t:H:mm:ss}]已备份 " + e), DateTime.Now);
         }
 
         private bool Reconfigure()
@@ -119,6 +147,18 @@ namespace FileHistoryStandalone
         private void FrmManager_Load(object sender, EventArgs e)
         {
             NicTray.Icon = Icon;
+        }
+
+        private void BtnTrim_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(this, "确实要删除这些版本吗？", Application.ProductName,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+            {
+                Program.Repo.Trim();
+                LvwFiles.Items.Clear();
+            }
+
         }
     }
 }
