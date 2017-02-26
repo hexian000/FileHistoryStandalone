@@ -9,14 +9,32 @@ namespace FileHistoryStandalone
 {
     class Repository
     {
-        private class RepoFile
+        public class DocFile
         {
-            public RepoFile(FileInfo file)
+            private List<RepoFile> backups;
+
+            internal DocFile(List<RepoFile> repoFiles)
+            {
+                backups = repoFiles;
+                FullName = repoFiles[0].Source;
+            }
+
+            public readonly string FullName;
+            public IEnumerable<RepoFile> EnumrateBackups() => backups;
+        }
+
+        public class RepoFile
+        {
+            internal RepoFile(FileInfo file, int repoPathLen)
             {
                 FullName = file.FullName;
                 string name = Path.GetFileNameWithoutExtension(file.FullName), ext = file.Extension;
                 int pos = name.LastIndexOf('_');
-                Source = name.Substring(0, pos) + ext;
+                // Restore drive letter
+                string srcDir = Path.GetDirectoryName(FullName).Substring(repoPathLen + 1);
+                if (srcDir.StartsWith("_")) srcDir = @"\" + srcDir.Substring(1);
+                else srcDir = srcDir[0] + @":" + srcDir.Substring(1);
+                Source = Path.Combine(srcDir, name.Substring(0, pos) + ext);
                 LastModifiedTimeUtc = DateTime.FromFileTimeUtc(long.Parse(name.Substring(pos + 1), System.Globalization.NumberStyles.AllowHexSpecifier));
                 Length = file.Length;
             }
@@ -27,7 +45,12 @@ namespace FileHistoryStandalone
             public readonly long Length;
         }
 
-        private static IEnumerable<RepoFile> EnumerateRepoFiles(string path)
+        private string RepoPath;
+        private Dictionary<string, List<RepoFile>> Files;
+
+        public event EventHandler<string> CopyMade;
+
+        private IEnumerable<RepoFile> EnumerateRepoFiles(string path)
         {
             IEnumerable<string> dirs;
             try
@@ -50,18 +73,12 @@ namespace FileHistoryStandalone
                 RepoFile f = null;
                 try
                 {
-                    f = new RepoFile(file);
+                    f = new RepoFile(file, RepoPath.Length);
                 }
                 catch { }
                 if (f != null) yield return f;
             }
         }
-
-        private string RepoPath;
-        private Dictionary<string, List<RepoFile>> Files;
-
-        public event EventHandler<string> CopyMade;
-
         private Repository(string repoPath)
         {
             RepoPath = repoPath;
@@ -77,7 +94,7 @@ namespace FileHistoryStandalone
         public static Repository Open(string path)
         {
             Repository ret = new Repository(path);
-            foreach (var i in EnumerateRepoFiles(path))
+            foreach (var i in ret.EnumerateRepoFiles(path))
                 ret.AddRepoFile(i);
             return ret;
         }
@@ -95,13 +112,16 @@ namespace FileHistoryStandalone
 
         public void MakeCopy(string source)
         {
+            string dir;
+            if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
+            else if (source.StartsWith(@"\\")) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
+            else throw new ArgumentException("不支持的路径格式", nameof(source));
             lock (Files)
             {
-                string dir = Path.Combine(RepoPath, Path.GetDirectoryName(source).Replace(":", ""));
                 Directory.CreateDirectory(dir);
                 string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
-                File.Copy(source, newPath);
-                AddRepoFile(new RepoFile(new FileInfo(newPath)));
+                File.Copy(@"\\?\" + source, @"\\?\" + newPath);
+                AddRepoFile(new RepoFile(new FileInfo(@"\\?\" + newPath), RepoPath.Length));
             }
             CopyMade?.Invoke(this, source);
         }
@@ -117,6 +137,31 @@ namespace FileHistoryStandalone
             }
             return Latest.Value;
         }
+
+        public List<DocFile> Navigate(string docPath)
+        {
+            List<DocFile> ret = new List<DocFile>();
+            docPath = docPath.ToLowerInvariant();
+            foreach (var i in Files.Keys)
+            {
+                if (Path.GetDirectoryName(i) == docPath) ret.Add(new DocFile(Files[i]));
+            }
+            return ret;
+        }
+
+        public IEnumerable<RepoFile> FindVersions(string docPath) => Files[docPath.ToLowerInvariant()];
+
+        public void DeleteVersion(RepoFile version)
+        {
+            File.Delete(@"\\?\" + version.FullName);
+            string id = version.Source.ToLowerInvariant();
+            List<RepoFile> vers = Files[id];
+            if (vers.Count == 1)
+                Files.Remove(id);
+            else
+                vers.Remove(version);
+        }
+        public void SaveAs(RepoFile file, string to, bool overwrite = false) => File.Copy(file.FullName, to, overwrite);
 
         public IEnumerable<DateTime> EnumrateCopies(string source)
         {
@@ -159,7 +204,7 @@ namespace FileHistoryStandalone
                     if (condition(i))
                     {
                         lenTotal += i.Length;
-                        File.Delete(i.FullName);
+                        File.Delete(@"\\?\" + i.FullName);
                         Files[i.Source.ToLowerInvariant()].Remove(i);
                     }
                     else survivor.Add(i);

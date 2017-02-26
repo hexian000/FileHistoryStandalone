@@ -71,9 +71,9 @@ namespace FileHistoryStandalone
                     string id = doc.FullName.ToLowerInvariant();
                     if (Repo.HasCopy(id))
                     {
-                        if (Repo.GetLatestCopyTimeUtc(id) < doc.LastWriteTimeUtc) Repo.MakeCopy(id);
+                        if (Repo.GetLatestCopyTimeUtc(id) < doc.LastWriteTimeUtc) Repo.MakeCopy(doc.FullName);
                     }
-                    else Repo.MakeCopy(id);
+                    else Repo.MakeCopy(doc.FullName);
                 }
             }
         }

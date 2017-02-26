@@ -37,6 +37,9 @@
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.BtnHide = new System.Windows.Forms.Button();
             this.NicTray = new System.Windows.Forms.NotifyIcon(this.components);
+            this.TxtDoc = new System.Windows.Forms.TextBox();
+            this.BtnFind = new System.Windows.Forms.Button();
+            this.OfdFind = new System.Windows.Forms.OpenFileDialog();
             this.StatusStripDefault.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -44,15 +47,15 @@
             // 
             this.StatusStripDefault.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.TsslStatus});
-            this.StatusStripDefault.Location = new System.Drawing.Point(0, 340);
+            this.StatusStripDefault.Location = new System.Drawing.Point(0, 341);
             this.StatusStripDefault.Name = "StatusStripDefault";
-            this.StatusStripDefault.Size = new System.Drawing.Size(635, 22);
+            this.StatusStripDefault.Size = new System.Drawing.Size(632, 22);
             this.StatusStripDefault.TabIndex = 0;
             // 
             // TsslStatus
             // 
             this.TsslStatus.Name = "TsslStatus";
-            this.TsslStatus.Size = new System.Drawing.Size(620, 17);
+            this.TsslStatus.Size = new System.Drawing.Size(617, 17);
             this.TsslStatus.Spring = true;
             this.TsslStatus.Text = "就绪";
             this.TsslStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -60,7 +63,8 @@
             // BtnReconfig
             // 
             this.BtnReconfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.BtnReconfig.Location = new System.Drawing.Point(531, 314);
+            this.BtnReconfig.Enabled = false;
+            this.BtnReconfig.Location = new System.Drawing.Point(528, 315);
             this.BtnReconfig.Name = "BtnReconfig";
             this.BtnReconfig.Size = new System.Drawing.Size(92, 23);
             this.BtnReconfig.TabIndex = 1;
@@ -77,27 +81,28 @@
             this.columnHeader1,
             this.columnHeader2});
             this.LvwFiles.FullRowSelect = true;
-            this.LvwFiles.Location = new System.Drawing.Point(12, 12);
+            this.LvwFiles.Location = new System.Drawing.Point(12, 41);
             this.LvwFiles.MultiSelect = false;
             this.LvwFiles.Name = "LvwFiles";
-            this.LvwFiles.Size = new System.Drawing.Size(611, 296);
+            this.LvwFiles.Size = new System.Drawing.Size(608, 268);
             this.LvwFiles.TabIndex = 2;
             this.LvwFiles.UseCompatibleStateImageBehavior = false;
             this.LvwFiles.View = System.Windows.Forms.View.Details;
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Text = "文件";
-            this.columnHeader1.Width = 480;
+            this.columnHeader1.Text = "版本修改时间";
+            this.columnHeader1.Width = 240;
             // 
             // columnHeader2
             // 
-            this.columnHeader2.Text = "修改时间";
-            this.columnHeader2.Width = 120;
+            this.columnHeader2.Text = "版本大小";
+            this.columnHeader2.Width = 240;
             // 
             // BtnHide
             // 
-            this.BtnHide.Location = new System.Drawing.Point(12, 314);
+            this.BtnHide.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.BtnHide.Location = new System.Drawing.Point(12, 315);
             this.BtnHide.Name = "BtnHide";
             this.BtnHide.Size = new System.Drawing.Size(148, 23);
             this.BtnHide.TabIndex = 3;
@@ -111,11 +116,35 @@
             this.NicTray.Visible = true;
             this.NicTray.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.NicTray_MouseDoubleClick);
             // 
+            // TxtDoc
+            // 
+            this.TxtDoc.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TxtDoc.Location = new System.Drawing.Point(12, 13);
+            this.TxtDoc.Name = "TxtDoc";
+            this.TxtDoc.ReadOnly = true;
+            this.TxtDoc.Size = new System.Drawing.Size(493, 21);
+            this.TxtDoc.TabIndex = 4;
+            // 
+            // BtnFind
+            // 
+            this.BtnFind.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BtnFind.Enabled = false;
+            this.BtnFind.Location = new System.Drawing.Point(511, 12);
+            this.BtnFind.Name = "BtnFind";
+            this.BtnFind.Size = new System.Drawing.Size(109, 23);
+            this.BtnFind.TabIndex = 5;
+            this.BtnFind.Text = "寻找版本";
+            this.BtnFind.UseVisualStyleBackColor = true;
+            this.BtnFind.Click += new System.EventHandler(this.BtnFind_Click);
+            // 
             // FrmManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(635, 362);
+            this.ClientSize = new System.Drawing.Size(632, 363);
+            this.Controls.Add(this.BtnFind);
+            this.Controls.Add(this.TxtDoc);
             this.Controls.Add(this.BtnHide);
             this.Controls.Add(this.LvwFiles);
             this.Controls.Add(this.BtnReconfig);
@@ -123,6 +152,7 @@
             this.Name = "FrmManager";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "File History Standalone";
+            this.Load += new System.EventHandler(this.FrmManager_Load);
             this.Shown += new System.EventHandler(this.FrmManager_Shown);
             this.StatusStripDefault.ResumeLayout(false);
             this.StatusStripDefault.PerformLayout();
@@ -141,6 +171,9 @@
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.Button BtnHide;
         private System.Windows.Forms.NotifyIcon NicTray;
+        private System.Windows.Forms.TextBox TxtDoc;
+        private System.Windows.Forms.Button BtnFind;
+        private System.Windows.Forms.OpenFileDialog OfdFind;
     }
 }
 

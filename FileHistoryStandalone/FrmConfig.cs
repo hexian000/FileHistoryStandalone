@@ -67,7 +67,10 @@ namespace FileHistoryStandalone
                     while (load.IsAlive) Application.DoEvents();
                 }
                 Properties.Settings.Default.Repo = TxtRepo.Text;
-                Program.DocLib = new DocLibrary(Program.Repo);
+                Program.DocLib = new DocLibrary(Program.Repo)
+                {
+                    Paths = TxtDocPath.Text
+                };
                 Properties.Settings.Default.DocPath = TxtDocPath.Text;
                 Properties.Settings.Default.FirstRun = false;
                 Properties.Settings.Default.Save();
