@@ -57,6 +57,10 @@ namespace FileHistoryStandalone
                     FileSystemWatcher watcher = new FileSystemWatcher(path);
                     watcher.Changed += Watcher_Changed;
                     watcher.Created += Watcher_Changed;
+                    watcher.Renamed += Watcher_Renamed;
+                    watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+                    watcher.IncludeSubdirectories = true;
+                    watcher.EnableRaisingEvents = true;
                     DocWatcher.Add(watcher);
                 }
             }
@@ -80,14 +84,15 @@ namespace FileHistoryStandalone
 
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
-            if (e.ChangeType == WatcherChangeTypes.Created)
-            {
-                Repo.MakeCopy(e.FullPath);
-            }
-            else if (e.ChangeType == WatcherChangeTypes.Changed)
-            {
-                Repo.MakeCopy(e.FullPath);
-            }
+            if (e.ChangeType == WatcherChangeTypes.Created
+                || e.ChangeType == WatcherChangeTypes.Changed)
+                if (File.Exists(e.FullPath)) Repo.MakeCopy(e.FullPath);
+        }
+
+        private void Watcher_Renamed(object sender, RenamedEventArgs e)
+        {
+            if (e.ChangeType == WatcherChangeTypes.Renamed)
+                if (File.Exists(e.FullPath)) Repo.Rename(e.OldFullPath, e.FullPath);
         }
 
         #region IDisposable Support

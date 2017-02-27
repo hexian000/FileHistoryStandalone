@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,24 +10,36 @@ namespace FileHistoryStandalone
 {
     class Repository
     {
+        const string Win32PathPrefix = @"\\?\";
+
         public class RepoFile
         {
             internal RepoFile(FileInfo file, int repoPathLen)
             {
                 FullName = file.FullName;
+                if (FullName.StartsWith(Win32PathPrefix)) FullName = FullName.Substring(4);
                 string name = Path.GetFileNameWithoutExtension(file.FullName), ext = file.Extension;
                 int pos = name.LastIndexOf('_');
                 // Restore drive letter
                 string srcDir = Path.GetDirectoryName(FullName).Substring(repoPathLen + 1);
-                if (srcDir.StartsWith("_")) srcDir = @"\" + srcDir.Substring(1);
+                if (srcDir.StartsWith("_")) srcDir = Path.DirectorySeparatorChar + srcDir.Substring(1);
                 else srcDir = srcDir[0] + @":" + srcDir.Substring(1);
                 Source = Path.Combine(srcDir, name.Substring(0, pos) + ext);
                 LastModifiedTimeUtc = DateTime.FromFileTimeUtc(long.Parse(name.Substring(pos + 1), System.Globalization.NumberStyles.AllowHexSpecifier));
                 Length = file.Length;
             }
 
-            public readonly string FullName;
-            public readonly string Source;
+            internal void SourceRename(string newName)
+            {
+                Source = newName;
+                string newFullName = Path.Combine(Path.GetDirectoryName(FullName), Path.GetFileNameWithoutExtension(Source) + "_" + new FileInfo(Source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(Source));
+                if (!newFullName.StartsWith(Win32PathPrefix)) newFullName = Win32PathPrefix + newFullName;
+                File.Move(Win32PathPrefix + FullName, newFullName);
+                FullName = newFullName;
+            }
+
+            public string FullName { get; private set; }
+            public string Source { get; private set; }
             public readonly DateTime LastModifiedTimeUtc;
             public readonly long Length;
         }
@@ -47,6 +60,7 @@ namespace FileHistoryStandalone
         }
 
         public event EventHandler<string> CopyMade;
+        public event EventHandler<string> Renamed;
 
         private IEnumerable<RepoFile> EnumerateRepoFiles(string path)
         {
@@ -88,6 +102,17 @@ namespace FileHistoryStandalone
         public static Repository Create(string path)
         {
             Directory.CreateDirectory(path);
+            try
+            {
+                string name = path.Trim();
+                if (name.StartsWith(Win32PathPrefix)) name = name.Substring(4);
+                ProcessStartInfo psi = new ProcessStartInfo("compact.exe", $"/c /s:\"{name}\" /q")
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                using (var proc = Process.Start(psi)) proc.WaitForExit();
+            }
+            catch { }
             return new Repository(path);
         }
 
@@ -99,9 +124,16 @@ namespace FileHistoryStandalone
             return ret;
         }
 
+        private static string GetIdByName(string fullName)
+        {
+            string name = fullName.Trim().ToLowerInvariant();
+            if (name.StartsWith(Win32PathPrefix)) name = name.Substring(4);
+            return name;
+        }
+
         private void AddRepoFile(RepoFile file)
         {
-            string src = file.Source.ToLowerInvariant();
+            string src = GetIdByName(file.Source);
             lock (Files)
             {
                 if (Files.ContainsKey(src))
@@ -118,18 +150,41 @@ namespace FileHistoryStandalone
         {
             string dir;
             if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
-            else if (source.StartsWith(@"\\")) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
+            else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
             else throw new ArgumentException("不支持的路径格式", nameof(source));
             long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
             if (sizeOverflow > 0) Trim(sizeOverflow);
             Directory.CreateDirectory(dir);
             string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
-            File.Copy(@"\\?\" + source, @"\\?\" + newPath);
-            AddRepoFile(new RepoFile(new FileInfo(@"\\?\" + newPath), RepoPath.Length));
-            CopyMade?.Invoke(this, source);
+            if (!File.Exists(newPath))
+            {
+                File.Copy(Win32PathPrefix + source, Win32PathPrefix + newPath);
+                AddRepoFile(new RepoFile(new FileInfo(Win32PathPrefix + newPath), RepoPath.Length));
+                CopyMade?.Invoke(this, source);
+            }
         }
 
-        public bool HasCopy(string source) => Files.ContainsKey(source.ToLowerInvariant());
+        public void Rename(string source, string newSource)
+        {
+            string src = GetIdByName(source);
+            bool exist = false;
+            lock (Files)
+            {
+                exist = Files.ContainsKey(src);
+                if (exist)
+                {
+                    var vers = Files[src];
+                    Files.Remove(src);
+                    foreach (RepoFile f in vers)
+                        f.SourceRename(newSource);
+                    Files.Add(GetIdByName(newSource), vers);
+                }
+            }
+            if (exist) Renamed?.Invoke(this, newSource);
+            else MakeCopy(newSource);
+        }
+
+        public bool HasCopy(string source) => Files.ContainsKey(GetIdByName(source));
         public DateTime GetLatestCopyTimeUtc(string source)
         {
             DateTime? Latest = null;
@@ -142,12 +197,12 @@ namespace FileHistoryStandalone
             return Latest.Value;
         }
 
-        public IEnumerable<RepoFile> FindVersions(string docPath) => Files[docPath.ToLowerInvariant()];
+        public IEnumerable<RepoFile> FindVersions(string docPath) => Files[GetIdByName(docPath)];
 
         public void DeleteVersion(RepoFile version)
         {
-            File.Delete(@"\\?\" + version.FullName);
-            string id = version.Source.ToLowerInvariant();
+            File.Delete(Win32PathPrefix + version.FullName);
+            string id = GetIdByName(version.Source);
             lock (Files)
             {
                 List<RepoFile> vers = Files[id];

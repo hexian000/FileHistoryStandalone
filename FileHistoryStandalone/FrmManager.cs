@@ -51,6 +51,7 @@ namespace FileHistoryStandalone
                 {
                     Program.Repo = Repository.Open(Properties.Settings.Default.Repo.Trim());
                     Program.Repo.CopyMade += Repo_CopyMade;
+                    Program.Repo.Renamed += Repo_Renamed;
                     Program.DocLib = new DocLibrary(Program.Repo)
                     {
                         Paths = Properties.Settings.Default.DocPath.Trim()
@@ -110,7 +111,12 @@ namespace FileHistoryStandalone
 
         private void Repo_CopyMade(object sender, string e)
         {
-            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) => TsslStatus.Text = $"[{t:H:mm:ss}]已备份 " + e), DateTime.Now);
+            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) => TsslStatus.Text = $"[{t:H:mm:ss}] 已备份 " + e), DateTime.Now);
+        }
+
+        private void Repo_Renamed(object sender, string e)
+        {
+            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) => TsslStatus.Text = $"[{t:H:mm:ss}] 重命名 " + e), DateTime.Now);
         }
 
         private bool Reconfigure()
