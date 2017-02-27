@@ -19,7 +19,7 @@ namespace FileHistoryStandalone
             InitializeComponent();
         }
 
-        private bool busy = true;
+        private int busy = 0;
 
         private void NicTray_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -98,7 +98,6 @@ namespace FileHistoryStandalone
                 Program.Repo.CopyMade += Repo_CopyMade;
                 Program.Repo.Renamed += Repo_Renamed;
                 重新配置RToolStripMenuItem.Enabled = false;
-                busy = true;
                 ScanLibAsync();
                 return true;
             }
@@ -110,6 +109,7 @@ namespace FileHistoryStandalone
         {
             if (ScanThread != null) return;
             if (InvokeRequired) Invoke(new Action(() => TsslStatus.Text = "已启动文档库扫描"));
+            Interlocked.Increment(ref busy);
             ScanThread = new Thread(() =>
               {
                   Program.DocLib.ScanLibrary();
@@ -120,7 +120,7 @@ namespace FileHistoryStandalone
                       TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成";
                   }));
                   ScanThread = null;
-                  busy = false;
+                  Interlocked.Decrement(ref busy);
               });
             ScanThread.Start();
         }
@@ -132,9 +132,9 @@ namespace FileHistoryStandalone
 
         private void FrmManager_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (busy)
+            if (busy > 0)
             {
-                e.Cancel = busy;
+                e.Cancel = true;
                 MessageBox.Show(this, "工作中，现在不能退出", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
@@ -159,14 +159,22 @@ namespace FileHistoryStandalone
             }
         }
 
+        private void FinishedMsgBox() => MessageBox.Show(this, "操作完成", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+
         private void 仅保留最新版本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show(this, "确实要删除这些版本吗？", Application.ProductName,
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2) == DialogResult.Yes)
             {
-                Program.Repo.Trim(false);
                 LvwFiles.Items.Clear();
+                Interlocked.Increment(ref busy);
+                new Thread(() =>
+                {
+                    Program.Repo.TrimFull();
+                    Invoke(new Action(FinishedMsgBox));
+                    Interlocked.Decrement(ref busy);
+                }).Start();
             }
         }
 
@@ -176,8 +184,14 @@ namespace FileHistoryStandalone
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2) == DialogResult.Yes)
             {
-                Program.Repo.Trim(new TimeSpan(90, 0, 0, 0));
                 LvwFiles.Items.Clear();
+                Interlocked.Increment(ref busy);
+                new Thread(() =>
+                {
+                    Program.Repo.Trim(new TimeSpan(90, 0, 0, 0));
+                    Invoke(new Action(FinishedMsgBox));
+                    Interlocked.Decrement(ref busy);
+                }).Start();
             }
         }
 
@@ -187,8 +201,14 @@ namespace FileHistoryStandalone
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2) == DialogResult.Yes)
             {
-                Program.Repo.Trim();
                 LvwFiles.Items.Clear();
+                Interlocked.Increment(ref busy);
+                new Thread(() =>
+                {
+                    Program.Repo.Trim();
+                    Invoke(new Action(FinishedMsgBox));
+                    Interlocked.Decrement(ref busy);
+                }).Start();
             }
         }
 

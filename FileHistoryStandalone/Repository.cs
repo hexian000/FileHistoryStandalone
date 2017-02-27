@@ -144,22 +144,25 @@ namespace FileHistoryStandalone
         public void MakeCopy(string source)
         {
             string dir;
-            if (source[1] == ':') dir = Win32PathPrefix + Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
-            else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Win32PathPrefix + Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
+            if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
+            else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
             else throw new ArgumentException("不支持的路径格式", nameof(source));
             long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
             if (sizeOverflow > 0) Trim(sizeOverflow);
             Directory.CreateDirectory(dir);
-            string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
+            string newPath = Win32PathPrefix + Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
             if (!File.Exists(newPath))
             {
                 try
                 {
-                    File.Copy(Win32PathPrefix + source, Win32PathPrefix + newPath);
-                    AddRepoFile(new RepoFile(new FileInfo(Win32PathPrefix + newPath), RepoPath.Length));
+                    File.Copy(Win32PathPrefix + source, newPath);
+                    AddRepoFile(new RepoFile(new FileInfo(newPath), RepoPath.Length));
                     CopyMade?.Invoke(this, source);
                 }
-                catch { }
+                catch (IOException ex)
+                {
+                    Debug.Print(ex.Message);
+                }
             }
         }
 
@@ -233,12 +236,14 @@ namespace FileHistoryStandalone
                 yield return i.LastModifiedTimeUtc;
         }
 
-        public void Trim(bool deletedOnly = true)
+        public void Trim()
         {
-            if (deletedOnly)
-                Trim((file) => File.Exists(Win32PathPrefix + file.Source));
-            else
-                Trim((file) => true);
+            Trim((file) => !File.Exists(Win32PathPrefix + file.Source));
+        }
+
+        public void TrimFull()
+        {
+            Trim((file) => true);
         }
 
         public void Trim(long spaceNeeded)
@@ -254,22 +259,26 @@ namespace FileHistoryStandalone
 
         private void Trim(Func<RepoFile, bool> condition, long spaceNeeded = -1)
         {
-            List<RepoFile> dupFiles = new List<RepoFile>();
+            List<RepoFile> redFiles = new List<RepoFile>();
             lock (Files)
                 foreach (var i in Files)
                 {
-                    DateTime? Latest = null;
-                    foreach (var j in i.Value)
+                    if (File.Exists(Win32PathPrefix + i.Key))
                     {
-                        if (Latest == null) Latest = j.LastModifiedTimeUtc;
-                        else if (Latest.Value < j.LastModifiedTimeUtc) Latest = j.LastModifiedTimeUtc;
+                        DateTime? Latest = null;
+                        foreach (var j in i.Value)
+                        {
+                            if (Latest == null) Latest = j.LastModifiedTimeUtc;
+                            else if (Latest.Value < j.LastModifiedTimeUtc) Latest = j.LastModifiedTimeUtc;
+                        }
+                        foreach (var j in i.Value)
+                            if (Latest.Value != j.LastModifiedTimeUtc) redFiles.Add(j);
                     }
-                    foreach (var j in i.Value)
-                        if (Latest.Value != j.LastModifiedTimeUtc) dupFiles.Add(j);
+                    else redFiles.AddRange(i.Value);
                 }
-            dupFiles.Sort((x, y) => Math.Sign((x.LastModifiedTimeUtc - y.LastModifiedTimeUtc).Ticks));
+            redFiles.Sort((x, y) => Math.Sign((x.LastModifiedTimeUtc - y.LastModifiedTimeUtc).Ticks));
             long lenTotal = 0;
-            foreach (var i in dupFiles)
+            foreach (var i in redFiles)
             {
                 if (condition(i))
                 {
@@ -280,7 +289,7 @@ namespace FileHistoryStandalone
                 if (spaceNeeded > 0)
                     if (lenTotal >= spaceNeeded) break;
             }
-            dupFiles = null;
+            redFiles = null;
         }
     }
 }

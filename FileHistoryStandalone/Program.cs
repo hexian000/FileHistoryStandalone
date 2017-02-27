@@ -39,7 +39,7 @@ namespace FileHistoryStandalone
                 Clipboard.SetText(log.ToString());
             }
             else msg = e.ExceptionObject.ToString();
-            MessageBox.Show("发生严重错误：" + msg + Environment.NewLine + "详细信息已复制到剪贴板", "File History Standalone", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("发生严重错误：" + msg + Environment.NewLine + "详细信息已复制到剪贴板", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         internal static string GetIdByName(string fullName)
