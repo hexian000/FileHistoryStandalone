@@ -5,12 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static FileHistoryStandalone.Program;
 
 namespace FileHistoryStandalone
 {
     class Repository
     {
-        const string Win32PathPrefix = @"\\?\";
 
         public class RepoFile
         {
@@ -34,7 +34,8 @@ namespace FileHistoryStandalone
                 Source = newName;
                 string newFullName = Path.Combine(Path.GetDirectoryName(FullName), Path.GetFileNameWithoutExtension(Source) + "_" + new FileInfo(Source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(Source));
                 if (!newFullName.StartsWith(Win32PathPrefix)) newFullName = Win32PathPrefix + newFullName;
-                File.Move(Win32PathPrefix + FullName, newFullName);
+                if (!File.Exists(newFullName)) File.Move(Win32PathPrefix + FullName, newFullName);
+                else File.Delete(Win32PathPrefix + FullName);
                 FullName = newFullName;
             }
 
@@ -94,6 +95,7 @@ namespace FileHistoryStandalone
 
         private Repository(string repoPath)
         {
+            if (repoPath.StartsWith(Win32PathPrefix)) repoPath = repoPath.Substring(4);
             RepoPath = repoPath;
             RepoSize = 0; RepoMaxSize = long.MaxValue;
             Files = new Dictionary<string, List<RepoFile>>();
@@ -124,13 +126,6 @@ namespace FileHistoryStandalone
             return ret;
         }
 
-        private static string GetIdByName(string fullName)
-        {
-            string name = fullName.Trim().ToLowerInvariant();
-            if (name.StartsWith(Win32PathPrefix)) name = name.Substring(4);
-            return name;
-        }
-
         private void AddRepoFile(RepoFile file)
         {
             string src = GetIdByName(file.Source);
@@ -149,8 +144,8 @@ namespace FileHistoryStandalone
         public void MakeCopy(string source)
         {
             string dir;
-            if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
-            else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
+            if (source[1] == ':') dir = Win32PathPrefix + Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
+            else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Win32PathPrefix + Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
             else throw new ArgumentException("不支持的路径格式", nameof(source));
             long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
             if (sizeOverflow > 0) Trim(sizeOverflow);
@@ -158,9 +153,13 @@ namespace FileHistoryStandalone
             string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
             if (!File.Exists(newPath))
             {
-                File.Copy(Win32PathPrefix + source, Win32PathPrefix + newPath);
-                AddRepoFile(new RepoFile(new FileInfo(Win32PathPrefix + newPath), RepoPath.Length));
-                CopyMade?.Invoke(this, source);
+                try
+                {
+                    File.Copy(Win32PathPrefix + source, Win32PathPrefix + newPath);
+                    AddRepoFile(new RepoFile(new FileInfo(Win32PathPrefix + newPath), RepoPath.Length));
+                    CopyMade?.Invoke(this, source);
+                }
+                catch { }
             }
         }
 
@@ -177,7 +176,20 @@ namespace FileHistoryStandalone
                     Files.Remove(src);
                     foreach (RepoFile f in vers)
                         f.SourceRename(newSource);
-                    Files.Add(GetIdByName(newSource), vers);
+                    string newid = GetIdByName(newSource);
+                    if (Files.ContainsKey(newid))
+                    {
+                        var currVers = Files[newid];
+                        foreach (var i in vers)
+                        {
+                            bool repoFileExist = false;
+                            foreach (var j in currVers)
+                                if (GetIdByName(i.FullName) == GetIdByName(j.FullName))
+                                { repoFileExist = true; break; }
+                            if (!repoFileExist) currVers.Add(i);
+                        }
+                    }
+                    else Files.Add(GetIdByName(newSource), vers);
                 }
             }
             if (exist) Renamed?.Invoke(this, newSource);
@@ -221,9 +233,12 @@ namespace FileHistoryStandalone
                 yield return i.LastModifiedTimeUtc;
         }
 
-        public void Trim()
+        public void Trim(bool deletedOnly = true)
         {
-            Trim((file) => true);
+            if (deletedOnly)
+                Trim((file) => File.Exists(Win32PathPrefix + file.Source));
+            else
+                Trim((file) => true);
         }
 
         public void Trim(long spaceNeeded)

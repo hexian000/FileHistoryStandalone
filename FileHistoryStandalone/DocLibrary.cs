@@ -51,9 +51,17 @@ namespace FileHistoryStandalone
             {
                 if (DocWatcher != null)
                     foreach (var i in DocWatcher) i.Dispose();
-                DocPath = new List<string>(value.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
-                foreach (var path in DocPath)
+                var libs = new List<string>(value.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
+                var ids = new List<string>(libs.Select(Program.GetIdByName));
+                for (var i = 0; i < ids.Count; i++)
+                    for (var j = 0; j < i; j++)
+                    {
+                        if (ids[i].StartsWith(ids[j]) || ids[j].StartsWith(ids[i]))
+                            throw new Exception("路径存在重复或相互包含");
+                    }
+                foreach (var path in libs)
                 {
+                    string id = Program.GetIdByName(path);
                     FileSystemWatcher watcher = new FileSystemWatcher(path);
                     watcher.Changed += Watcher_Changed;
                     watcher.Created += Watcher_Changed;
@@ -63,6 +71,7 @@ namespace FileHistoryStandalone
                     watcher.EnableRaisingEvents = true;
                     DocWatcher.Add(watcher);
                 }
+                DocPath = libs;
             }
         }
 
