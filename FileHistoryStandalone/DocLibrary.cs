@@ -9,30 +9,6 @@ namespace FileHistoryStandalone
 {
     class DocLibrary : IDisposable
     {
-        private static IEnumerable<FileInfo> EnumerateFiles(string path)
-        {
-            IEnumerable<string> dirs;
-            try
-            {
-                dirs = Directory.EnumerateDirectories(path);
-            }
-            catch { dirs = new List<string>(0); }
-            foreach (var dir in dirs)
-                foreach (var file in EnumerateFiles(dir))
-                    yield return file;
-            IEnumerable<FileInfo> files;
-            try
-            {
-                DirectoryInfo thisdir = new DirectoryInfo(path);
-                files = thisdir.EnumerateFiles();
-            }
-            catch { files = new List<FileInfo>(0); }
-            foreach (var file in files)
-            {
-                yield return file;
-            }
-        }
-
         private List<string> DocPath;
         private List<FileSystemWatcher> DocWatcher;
         private Repository Repo;
@@ -66,7 +42,7 @@ namespace FileHistoryStandalone
                     watcher.Changed += Watcher_Changed;
                     watcher.Created += Watcher_Changed;
                     watcher.Renamed += Watcher_Renamed;
-                    watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+                    watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
                     watcher.IncludeSubdirectories = true;
                     watcher.EnableRaisingEvents = true;
                     DocWatcher.Add(watcher);
@@ -79,7 +55,7 @@ namespace FileHistoryStandalone
         {
             foreach (var i in DocPath)
             {
-                foreach (var doc in EnumerateFiles(i))
+                foreach (var doc in Program.EnumerateFiles(i))
                 {
                     string id = doc.FullName.ToLowerInvariant();
                     if (Repo.HasCopy(id))
@@ -101,7 +77,10 @@ namespace FileHistoryStandalone
         private void Watcher_Renamed(object sender, RenamedEventArgs e)
         {
             if (e.ChangeType == WatcherChangeTypes.Renamed)
+            {
                 if (File.Exists(e.FullPath)) Repo.Rename(e.OldFullPath, e.FullPath);
+                else if (Directory.Exists(e.FullPath)) Repo.RenameDir(e.OldFullPath, e.FullPath);
+            }
         }
 
         #region IDisposable Support

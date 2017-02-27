@@ -33,10 +33,15 @@ namespace FileHistoryStandalone
             {
                 Source = newName;
                 string newFullName = Path.Combine(Path.GetDirectoryName(FullName), Path.GetFileNameWithoutExtension(Source) + "_" + new FileInfo(Source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(Source));
-                if (!newFullName.StartsWith(Win32PathPrefix)) newFullName = Win32PathPrefix + newFullName;
-                if (!File.Exists(newFullName)) File.Move(Win32PathPrefix + FullName, newFullName);
+                if (!File.Exists(Win32PathPrefix + newFullName)) File.Move(Win32PathPrefix + FullName, Win32PathPrefix + newFullName);
                 else File.Delete(Win32PathPrefix + FullName);
                 FullName = newFullName;
+            }
+
+            internal void SourceRenameDir(string oldName, string newName)
+            {
+                Source = newName + Source.Substring(oldName.Length);
+                FullName = newName + FullName.Substring(oldName.Length);
             }
 
             public string FullName { get; private set; }
@@ -47,7 +52,7 @@ namespace FileHistoryStandalone
 
         private string RepoPath;
         private long RepoSize, RepoMaxSize;
-        private Dictionary<string, List<RepoFile>> Files;
+        private SortedDictionary<string, List<RepoFile>> Files;
 
         public long Size { get { return RepoSize; } }
         public long MaxSize
@@ -98,7 +103,7 @@ namespace FileHistoryStandalone
             if (repoPath.StartsWith(Win32PathPrefix)) repoPath = repoPath.Substring(4);
             RepoPath = repoPath;
             RepoSize = 0; RepoMaxSize = long.MaxValue;
-            Files = new Dictionary<string, List<RepoFile>>();
+            Files = new SortedDictionary<string, List<RepoFile>>();
         }
 
         public static Repository Create(string path)
@@ -143,26 +148,24 @@ namespace FileHistoryStandalone
 
         public void MakeCopy(string source)
         {
+            if (source.StartsWith(Win32PathPrefix)) source = source.Substring(4);
             string dir;
             if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
-            else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
+            // else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
             else throw new ArgumentException("不支持的路径格式", nameof(source));
             long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
             if (sizeOverflow > 0) Trim(sizeOverflow);
-            Directory.CreateDirectory(dir);
-            string newPath = Win32PathPrefix + Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
-            if (!File.Exists(newPath))
+            Directory.CreateDirectory(Win32PathPrefix + dir);
+            string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
+            try
             {
-                try
-                {
-                    File.Copy(Win32PathPrefix + source, newPath);
-                    AddRepoFile(new RepoFile(new FileInfo(newPath), RepoPath.Length));
-                    CopyMade?.Invoke(this, source);
-                }
-                catch (IOException ex)
-                {
-                    Debug.Print(ex.Message);
-                }
+                File.Copy(Win32PathPrefix + source, Win32PathPrefix + newPath, true);
+                AddRepoFile(new RepoFile(new FileInfo(newPath), RepoPath.Length));
+                CopyMade?.Invoke(this, source);
+            }
+            catch (IOException ex)
+            {
+                Debug.Print(ex.Message);
             }
         }
 
@@ -199,6 +202,36 @@ namespace FileHistoryStandalone
             else MakeCopy(newSource);
         }
 
+        public void RenameDir(string source, string newSource)
+        {
+            if (source[1] != ':') throw new ArgumentException("不支持的路径格式", nameof(source));
+            if (newSource[1] != ':') throw new ArgumentException("不支持的路径格式", nameof(newSource));
+            string src = GetIdByName(source) + Path.DirectorySeparatorChar,
+                newsrc = GetIdByName(newSource) + Path.DirectorySeparatorChar;
+            Directory.Move(Win32PathPrefix + Path.Combine(RepoPath, source[0] + source.Substring(2)),
+                Win32PathPrefix + Path.Combine(RepoPath, newSource[0] + newSource.Substring(2)));
+            lock (Files)
+            {
+                Dictionary<string, List<RepoFile>> adds = new Dictionary<string, List<RepoFile>>();
+                List<string> removes = new List<string>();
+                foreach (var f in Files)
+                {
+                    if (f.Key.StartsWith(src))
+                    {
+                        removes.Add(f.Key);
+                        foreach (var rf in f.Value)
+                        {
+                            rf.SourceRenameDir(source, newSource);
+                        }
+                        adds.Add(newsrc + f.Key.Substring(src.Length), f.Value);
+                    }
+                }
+                foreach (var f in removes) Files.Remove(f);
+                foreach (var f in adds) Files.Add(f.Key, f.Value);
+            }
+            Renamed?.Invoke(this, newSource);
+        }
+
         public bool HasCopy(string source) => Files.ContainsKey(GetIdByName(source));
         public DateTime GetLatestCopyTimeUtc(string source)
         {
@@ -228,7 +261,7 @@ namespace FileHistoryStandalone
             }
             RepoSize -= version.Length;
         }
-        public void SaveAs(RepoFile file, string to, bool overwrite = false) => File.Copy(file.FullName, to, overwrite);
+        public void SaveAs(RepoFile file, string to, bool overwrite = false) => File.Copy(Win32PathPrefix + file.FullName, to, overwrite);
 
         public IEnumerable<DateTime> EnumrateCopies(string source)
         {
@@ -257,7 +290,7 @@ namespace FileHistoryStandalone
             Trim((file) => file.LastModifiedTimeUtc < deadline);
         }
 
-        private void Trim(Func<RepoFile, bool> condition, long spaceNeeded = -1)
+        public void Trim(Func<RepoFile, bool> condition, long spaceNeeded = -1)
         {
             List<RepoFile> redFiles = new List<RepoFile>();
             lock (Files)
@@ -290,6 +323,7 @@ namespace FileHistoryStandalone
                     if (lenTotal >= spaceNeeded) break;
             }
             redFiles = null;
+            TrimEmptyDirs(RepoPath);
         }
     }
 }

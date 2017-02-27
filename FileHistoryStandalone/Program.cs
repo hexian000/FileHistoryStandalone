@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,6 +48,43 @@ namespace FileHistoryStandalone
             string name = fullName.Trim().ToLowerInvariant();
             if (name.StartsWith(Win32PathPrefix)) name = name.Substring(4);
             return name;
+        }
+
+        internal static IEnumerable<FileInfo> EnumerateFiles(string path)
+        {
+            IEnumerable<string> dirs;
+            try
+            {
+                dirs = Directory.EnumerateDirectories(path);
+            }
+            catch { dirs = new List<string>(0); }
+            foreach (var dir in dirs)
+                foreach (var file in EnumerateFiles(dir))
+                    yield return file;
+            IEnumerable<FileInfo> files;
+            try
+            {
+                DirectoryInfo thisdir = new DirectoryInfo(path);
+                files = thisdir.EnumerateFiles();
+            }
+            catch { files = new List<FileInfo>(0); }
+            foreach (var file in files)
+            {
+                yield return file;
+            }
+        }
+
+        internal static void TrimEmptyDirs(string path)
+        {
+            try
+            {
+                if (Directory.EnumerateFileSystemEntries(path).Count() == 0)
+                    Directory.Delete(path);
+                else
+                    foreach (var dir in Directory.EnumerateDirectories(path))
+                        TrimEmptyDirs(dir);
+            }
+            catch { }
         }
     }
 }

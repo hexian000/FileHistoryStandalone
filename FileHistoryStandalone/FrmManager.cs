@@ -159,55 +159,63 @@ namespace FileHistoryStandalone
             }
         }
 
-        private void FinishedMsgBox() => MessageBox.Show(this, "操作完成", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        private void TrimFinished()
+        {
+            TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 版本清理完成";
+        }
 
-        private void 仅保留最新版本ToolStripMenuItem_Click(object sender, EventArgs e)
+        private bool TrimPrompt()
         {
             if (MessageBox.Show(this, "确实要删除这些版本吗？", Application.ProductName,
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2) == DialogResult.Yes)
             {
                 LvwFiles.Items.Clear();
+                TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 已启动版本清理";
+                return true;
+            }
+            return false;
+        }
+
+        private void 仅保留最新版本ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (TrimPrompt())
+            {
                 Interlocked.Increment(ref busy);
                 new Thread(() =>
                 {
                     Program.Repo.TrimFull();
-                    Invoke(new Action(FinishedMsgBox));
                     Interlocked.Decrement(ref busy);
+                    BeginInvoke(new Action(TrimFinished));
                 }).Start();
             }
         }
 
         private void 删除90天以前的版本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show(this, "确实要删除这些版本吗？", Application.ProductName,
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+
+            if (TrimPrompt())
             {
-                LvwFiles.Items.Clear();
                 Interlocked.Increment(ref busy);
                 new Thread(() =>
                 {
                     Program.Repo.Trim(new TimeSpan(90, 0, 0, 0));
-                    Invoke(new Action(FinishedMsgBox));
                     Interlocked.Decrement(ref busy);
+                    BeginInvoke(new Action(TrimFinished));
                 }).Start();
             }
         }
 
         private void 删除已删除文件的备份ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show(this, "确实要删除这些版本吗？", Application.ProductName,
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+            if (TrimPrompt())
             {
-                LvwFiles.Items.Clear();
                 Interlocked.Increment(ref busy);
                 new Thread(() =>
                 {
                     Program.Repo.Trim();
-                    Invoke(new Action(FinishedMsgBox));
                     Interlocked.Decrement(ref busy);
+                    BeginInvoke(new Action(TrimFinished));
                 }).Start();
             }
         }
