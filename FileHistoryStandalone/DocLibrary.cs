@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FileHistoryStandalone
@@ -71,7 +72,13 @@ namespace FileHistoryStandalone
         {
             if (e.ChangeType == WatcherChangeTypes.Created
                 || e.ChangeType == WatcherChangeTypes.Changed)
-                if (File.Exists(e.FullPath)) Repo.MakeCopy(e.FullPath);
+            {
+                new Task(() =>
+                {
+                    Thread.Sleep(10000);
+                    if (File.Exists(e.FullPath)) Repo.MakeCopy(e.FullPath);
+                });
+            }
         }
 
         private void Watcher_Renamed(object sender, RenamedEventArgs e)

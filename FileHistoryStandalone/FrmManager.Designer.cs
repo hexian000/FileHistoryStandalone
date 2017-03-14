@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmManager));
             this.StatusStripDefault = new System.Windows.Forms.StatusStrip();
             this.TsslStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.LvwFiles = new System.Windows.Forms.ListView();
@@ -43,16 +44,16 @@
             this.SfdSaveAs = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.程序PToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.清理CToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.寻找版本FToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.隐藏HToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.重新配置RToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.退出XToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.清理CToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除已删除文件的备份ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除90天以前的版本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.仅保留最新版本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.隐藏HToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
-            this.退出XToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.寻找版本FToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.StatusStripDefault.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -70,7 +71,7 @@
             // TsslStatus
             // 
             this.TsslStatus.Name = "TsslStatus";
-            this.TsslStatus.Size = new System.Drawing.Size(617, 17);
+            this.TsslStatus.Size = new System.Drawing.Size(511, 17);
             this.TsslStatus.Spring = true;
             this.TsslStatus.Text = "就绪";
             this.TsslStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -173,6 +174,44 @@
             this.程序PToolStripMenuItem.Size = new System.Drawing.Size(59, 21);
             this.程序PToolStripMenuItem.Text = "程序(&P)";
             // 
+            // 寻找版本FToolStripMenuItem
+            // 
+            this.寻找版本FToolStripMenuItem.Name = "寻找版本FToolStripMenuItem";
+            this.寻找版本FToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.寻找版本FToolStripMenuItem.Text = "寻找版本(&F)";
+            this.寻找版本FToolStripMenuItem.Click += new System.EventHandler(this.寻找版本FToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(137, 6);
+            // 
+            // 隐藏HToolStripMenuItem
+            // 
+            this.隐藏HToolStripMenuItem.Name = "隐藏HToolStripMenuItem";
+            this.隐藏HToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.隐藏HToolStripMenuItem.Text = "隐藏(&H)";
+            this.隐藏HToolStripMenuItem.Click += new System.EventHandler(this.隐藏HToolStripMenuItem_Click);
+            // 
+            // 重新配置RToolStripMenuItem
+            // 
+            this.重新配置RToolStripMenuItem.Name = "重新配置RToolStripMenuItem";
+            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.重新配置RToolStripMenuItem.Text = "重新配置(&R)";
+            this.重新配置RToolStripMenuItem.Click += new System.EventHandler(this.重新配置RToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(137, 6);
+            // 
+            // 退出XToolStripMenuItem
+            // 
+            this.退出XToolStripMenuItem.Name = "退出XToolStripMenuItem";
+            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.退出XToolStripMenuItem.Text = "退出(&X)";
+            this.退出XToolStripMenuItem.Click += new System.EventHandler(this.退出XToolStripMenuItem_Click);
+            // 
             // 清理CToolStripMenuItem
             // 
             this.清理CToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -182,13 +221,6 @@
             this.清理CToolStripMenuItem.Name = "清理CToolStripMenuItem";
             this.清理CToolStripMenuItem.Size = new System.Drawing.Size(60, 21);
             this.清理CToolStripMenuItem.Text = "清理(&C)";
-            // 
-            // 重新配置RToolStripMenuItem
-            // 
-            this.重新配置RToolStripMenuItem.Name = "重新配置RToolStripMenuItem";
-            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.重新配置RToolStripMenuItem.Text = "重新配置(&R)";
-            this.重新配置RToolStripMenuItem.Click += new System.EventHandler(this.重新配置RToolStripMenuItem_Click);
             // 
             // 删除已删除文件的备份ToolStripMenuItem
             // 
@@ -211,37 +243,6 @@
             this.仅保留最新版本ToolStripMenuItem.Text = "仅保留最新版本";
             this.仅保留最新版本ToolStripMenuItem.Click += new System.EventHandler(this.仅保留最新版本ToolStripMenuItem_Click);
             // 
-            // 隐藏HToolStripMenuItem
-            // 
-            this.隐藏HToolStripMenuItem.Name = "隐藏HToolStripMenuItem";
-            this.隐藏HToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.隐藏HToolStripMenuItem.Text = "隐藏(&H)";
-            this.隐藏HToolStripMenuItem.Click += new System.EventHandler(this.隐藏HToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
-            // 
-            // 退出XToolStripMenuItem
-            // 
-            this.退出XToolStripMenuItem.Name = "退出XToolStripMenuItem";
-            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.退出XToolStripMenuItem.Text = "退出(&X)";
-            this.退出XToolStripMenuItem.Click += new System.EventHandler(this.退出XToolStripMenuItem_Click);
-            // 
-            // 寻找版本FToolStripMenuItem
-            // 
-            this.寻找版本FToolStripMenuItem.Name = "寻找版本FToolStripMenuItem";
-            this.寻找版本FToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.寻找版本FToolStripMenuItem.Text = "寻找版本(&F)";
-            this.寻找版本FToolStripMenuItem.Click += new System.EventHandler(this.寻找版本FToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem2
-            // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
-            // 
             // FrmManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -251,6 +252,8 @@
             this.Controls.Add(this.LvwFiles);
             this.Controls.Add(this.StatusStripDefault);
             this.Controls.Add(this.menuStrip1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "FrmManager";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
