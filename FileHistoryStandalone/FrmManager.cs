@@ -52,6 +52,11 @@ namespace FileHistoryStandalone
                     menuStrip1.Invoke(new Action(() => 寻找版本FToolStripMenuItem.Enabled = true));
                 }).Start();
             }
+            if (Program.CommandLine.Length > 0)
+            {
+                string arg0 = Program.CommandLine[0].ToLower();
+                if (arg0 == "--hide" || arg0 == "-h") Hide();
+            }
         }
 
         private void 另存为AToolStripMenuItem_Click(object sender, EventArgs e)

@@ -13,13 +13,15 @@ namespace FileHistoryStandalone
         internal const string Win32PathPrefix = @"\\?\";
         internal static Repository Repo = null;
         internal static DocLibrary DocLib = null;
+        internal static string[] CommandLine;
 
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            CommandLine = args;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
