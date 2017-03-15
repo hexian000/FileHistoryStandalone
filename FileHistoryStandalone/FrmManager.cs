@@ -137,6 +137,7 @@ namespace FileHistoryStandalone
                 e.Cancel = true;
                 MessageBox.Show(this, "工作中，现在不能退出", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
+            else Program.DocLib.Dispose();
         }
 
         private void 寻找版本FToolStripMenuItem_Click(object sender, EventArgs e)

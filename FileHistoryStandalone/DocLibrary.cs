@@ -124,7 +124,7 @@ namespace FileHistoryStandalone
 
         }
 
-        private void Sync()
+        private void Sync(bool flush = false)
         {
             lock (OperBuff)
             {
@@ -132,8 +132,7 @@ namespace FileHistoryStandalone
                 foreach (var i in OperBuff)
                 {
                     i.Countdown--;
-                    if (i.Countdown > 0) alive.Add(i);
-                    else
+                    if (flush || i.Countdown <= 0)
                     {
                         var e = i.Args;
                         if (e.ChangeType == WatcherChangeTypes.Created
@@ -147,8 +146,8 @@ namespace FileHistoryStandalone
                             if (File.Exists(e2.FullPath)) Repo.Rename(e2.OldFullPath, e2.FullPath);
                             else if (Directory.Exists(e2.FullPath)) Repo.RenameDir(e2.OldFullPath, e2.FullPath);
                         }
-
                     }
+                    else alive.Add(i);
                 }
                 OperBuff.Clear();
                 OperBuff.AddRange(alive);
@@ -166,13 +165,16 @@ namespace FileHistoryStandalone
                 {
                     if (DocWatcher != null)
                         foreach (var i in DocWatcher) i.Dispose();
-                    BufSync?.Dispose();
-                    BufSync = null;
+                    BufSync.Dispose();
+                    if (OperBuff != null)
+                        Sync(true);
                 }
 
                 DocPath = null;
                 DocWatcher = null;
+                BufSync = null;
                 Repo = null;
+                OperBuff = null;
 
                 disposedValue = true;
             }
