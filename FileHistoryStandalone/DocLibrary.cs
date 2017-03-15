@@ -10,14 +10,25 @@ namespace FileHistoryStandalone
 {
     class DocLibrary : IDisposable
     {
+        private class OperBufItem
+        {
+            public OperBufItem(FileSystemEventArgs args) { Args = args; }
+            public FileSystemEventArgs Args;
+            public int Countdown = 5;
+        }
+
         private List<string> DocPath;
         private List<FileSystemWatcher> DocWatcher;
+        private List<OperBufItem> OperBuff;
+        private Timer BufSync;
         private Repository Repo;
 
         public DocLibrary(Repository repo)
         {
             DocPath = new List<string>();
             DocWatcher = new List<FileSystemWatcher>();
+            OperBuff = new List<OperBufItem>();
+            BufSync = new Timer((o) => Sync(), null, 10000, 2000);
             Repo = repo;
         }
 
@@ -71,22 +82,76 @@ namespace FileHistoryStandalone
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
             if (e.ChangeType == WatcherChangeTypes.Created
-                || e.ChangeType == WatcherChangeTypes.Changed)
-            {
-                new Task(() =>
+            || e.ChangeType == WatcherChangeTypes.Changed)
+                lock (OperBuff)
                 {
-                    Thread.Sleep(10000);
-                    if (File.Exists(e.FullPath)) Repo.MakeCopy(e.FullPath);
-                });
-            }
+                    bool found = false;
+                    foreach (var i in OperBuff)
+                    {
+                        if ((i.Args.ChangeType == WatcherChangeTypes.Created
+                            || e.ChangeType == WatcherChangeTypes.Changed)
+                            && i.Args.FullPath.ToLowerInvariant() == e.FullPath.ToLowerInvariant())
+                        {
+                            i.Countdown = 5;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) OperBuff.Add(new OperBufItem(e));
+                }
         }
 
         private void Watcher_Renamed(object sender, RenamedEventArgs e)
         {
             if (e.ChangeType == WatcherChangeTypes.Renamed)
+                lock (OperBuff)
+                {
+                    bool found = false;
+                    foreach (var i in OperBuff)
+                    {
+                        if (i.Args.ChangeType == WatcherChangeTypes.Renamed &&
+                            i.Args.FullPath.ToLowerInvariant() == e.OldFullPath.ToLowerInvariant())
+                        {
+                            i.Args = new RenamedEventArgs(e.ChangeType,
+                                Path.GetDirectoryName(e.FullPath),
+                                e.Name, ((RenamedEventArgs)i.Args).OldName);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) OperBuff.Add(new OperBufItem(e));
+                }
+
+        }
+
+        private void Sync()
+        {
+            lock (OperBuff)
             {
-                if (File.Exists(e.FullPath)) Repo.Rename(e.OldFullPath, e.FullPath);
-                else if (Directory.Exists(e.FullPath)) Repo.RenameDir(e.OldFullPath, e.FullPath);
+                List<OperBufItem> alive = new List<OperBufItem>();
+                foreach (var i in OperBuff)
+                {
+                    i.Countdown--;
+                    if (i.Countdown > 0) alive.Add(i);
+                    else
+                    {
+                        var e = i.Args;
+                        if (e.ChangeType == WatcherChangeTypes.Created
+                        || e.ChangeType == WatcherChangeTypes.Changed)
+                        {
+                            if (File.Exists(e.FullPath)) Repo.MakeCopy(e.FullPath);
+                        }
+                        else if (e.ChangeType == WatcherChangeTypes.Renamed)
+                        {
+                            var e2 = (RenamedEventArgs)i.Args;
+                            if (File.Exists(e2.FullPath)) Repo.Rename(e2.OldFullPath, e2.FullPath);
+                            else if (Directory.Exists(e2.FullPath)) Repo.RenameDir(e2.OldFullPath, e2.FullPath);
+                        }
+
+                    }
+                }
+                OperBuff.Clear();
+                OperBuff.AddRange(alive);
             }
         }
 
@@ -101,6 +166,8 @@ namespace FileHistoryStandalone
                 {
                     if (DocWatcher != null)
                         foreach (var i in DocWatcher) i.Dispose();
+                    BufSync?.Dispose();
+                    BufSync = null;
                 }
 
                 DocPath = null;
