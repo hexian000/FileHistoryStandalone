@@ -102,7 +102,6 @@ namespace FileHistoryStandalone
             {
                 Program.Repo.CopyMade += Repo_CopyMade;
                 Program.Repo.Renamed += Repo_Renamed;
-                重新配置RToolStripMenuItem.Enabled = false;
                 ScanLibAsync();
                 return true;
             }
@@ -121,7 +120,6 @@ namespace FileHistoryStandalone
                   Invoke(new Action(() =>
                   {
                       // NicTray.ShowBalloonTip(5000, "FileHistoryStandalone", "文档库扫描完成", ToolTipIcon.Info);
-                      重新配置RToolStripMenuItem.Enabled = true;
                       TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成";
                   }));
                   ScanThread = null;
@@ -170,6 +168,16 @@ namespace FileHistoryStandalone
             TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 版本清理完成";
         }
 
+        private bool CheckBusy()
+        {
+            if (busy > 0)
+            {
+                MessageBox.Show(this, "工作中，现在不能执行此动作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+            return true;
+        }
+
         private bool TrimPrompt()
         {
             if (MessageBox.Show(this, "确实要删除这些版本吗？", Application.ProductName,
@@ -185,7 +193,7 @@ namespace FileHistoryStandalone
 
         private void 仅保留最新版本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (TrimPrompt())
+            if (CheckBusy() && TrimPrompt())
             {
                 Interlocked.Increment(ref busy);
                 new Thread(() =>
@@ -200,7 +208,7 @@ namespace FileHistoryStandalone
         private void 删除90天以前的版本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
-            if (TrimPrompt())
+            if (CheckBusy() && TrimPrompt())
             {
                 Interlocked.Increment(ref busy);
                 new Thread(() =>
@@ -214,7 +222,7 @@ namespace FileHistoryStandalone
 
         private void 删除已删除文件的备份ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (TrimPrompt())
+            if (CheckBusy() && TrimPrompt())
             {
                 Interlocked.Increment(ref busy);
                 new Thread(() =>
@@ -233,7 +241,8 @@ namespace FileHistoryStandalone
 
         private void 重新配置RToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Reconfigure();
+            if (CheckBusy())
+                Reconfigure();
         }
 
         private void 退出XToolStripMenuItem_Click(object sender, EventArgs e)

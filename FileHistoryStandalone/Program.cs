@@ -24,14 +24,26 @@ namespace FileHistoryStandalone
             CommandLine = args;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += Application_ThreadException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Application.Run(new FrmManager());
         }
 
+        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            DoUnhandledException(e.Exception);
+        }
+
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            DoUnhandledException(e.ExceptionObject);
+        }
+
+        private static void DoUnhandledException(object exception)
+        {
             StringBuilder log = new StringBuilder();
-            Exception ex = e.ExceptionObject as Exception;
+            Exception ex = exception as Exception;
             string msg;
             if (ex != null)
             {
@@ -41,8 +53,9 @@ namespace FileHistoryStandalone
                 log.AppendLine("StackTrace: " + ex.StackTrace);
                 Clipboard.SetText(log.ToString());
             }
-            else msg = e.ExceptionObject.ToString();
+            else msg = exception.ToString();
             MessageBox.Show("发生严重错误：" + msg + Environment.NewLine + "详细信息已复制到剪贴板", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Environment.Exit(1);
         }
 
         internal static string GetIdByName(string fullName)

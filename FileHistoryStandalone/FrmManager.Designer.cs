@@ -177,38 +177,38 @@
             // 寻找版本FToolStripMenuItem
             // 
             this.寻找版本FToolStripMenuItem.Name = "寻找版本FToolStripMenuItem";
-            this.寻找版本FToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.寻找版本FToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.寻找版本FToolStripMenuItem.Text = "寻找版本(&F)";
             this.寻找版本FToolStripMenuItem.Click += new System.EventHandler(this.寻找版本FToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(137, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
             // 
             // 隐藏HToolStripMenuItem
             // 
             this.隐藏HToolStripMenuItem.Name = "隐藏HToolStripMenuItem";
-            this.隐藏HToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.隐藏HToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.隐藏HToolStripMenuItem.Text = "隐藏(&H)";
             this.隐藏HToolStripMenuItem.Click += new System.EventHandler(this.隐藏HToolStripMenuItem_Click);
             // 
             // 重新配置RToolStripMenuItem
             // 
             this.重新配置RToolStripMenuItem.Name = "重新配置RToolStripMenuItem";
-            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.重新配置RToolStripMenuItem.Text = "重新配置(&R)";
             this.重新配置RToolStripMenuItem.Click += new System.EventHandler(this.重新配置RToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(137, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // 退出XToolStripMenuItem
             // 
             this.退出XToolStripMenuItem.Name = "退出XToolStripMenuItem";
-            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.退出XToolStripMenuItem.Text = "退出(&X)";
             this.退出XToolStripMenuItem.Click += new System.EventHandler(this.退出XToolStripMenuItem_Click);
             // 
@@ -253,7 +253,6 @@
             this.Controls.Add(this.StatusStripDefault);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "FrmManager";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
