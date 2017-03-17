@@ -33,7 +33,7 @@ namespace FileHistoryStandalone
             {
                 Source = newName;
                 string newFullName = Path.Combine(Path.GetDirectoryName(FullName), Path.GetFileNameWithoutExtension(Source) + "_" + new FileInfo(Source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(Source));
-                if (!File.Exists(Win32PathPrefix + newFullName)) File.Delete(Win32PathPrefix + newFullName);
+                if (File.Exists(Win32PathPrefix + newFullName)) File.Delete(Win32PathPrefix + newFullName);
                 File.Move(Win32PathPrefix + FullName, Win32PathPrefix + newFullName);
                 FullName = newFullName;
             }
