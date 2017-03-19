@@ -15,6 +15,21 @@ namespace FileHistoryStandalone
         internal static DocLibrary DocLib = null;
         internal static string[] CommandLine;
 
+        internal static StreamWriter log = null;
+        internal static void WriteDebugLog(string tag, object message)
+        {
+            if (log == null) return;
+            log.Write($"{DateTime.Now.ToString("yyyyMMddHHmmss")}\t{tag}\t");
+            Exception ex = message as Exception;
+            if (ex != null)
+                log.WriteLine($"{ex.GetType().Name}: {ex.Message} {ex.StackTrace}");
+            else if (message != null)
+                log.WriteLine($"{message.GetType().Name}: {message.ToString()}");
+            else
+                log.WriteLine($"null");
+            log.Flush();
+        }
+
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
@@ -40,7 +55,7 @@ namespace FileHistoryStandalone
             DoUnhandledException(e.ExceptionObject);
         }
 
-        private static void DoUnhandledException(object exception)
+        internal static void DoUnhandledException(object exception)
         {
             StringBuilder log = new StringBuilder();
             Exception ex = exception as Exception;
@@ -54,6 +69,8 @@ namespace FileHistoryStandalone
                 Clipboard.SetText(log.ToString());
             }
             else msg = exception.ToString();
+            WriteDebugLog("BUGCHK", msg);
+            Program.log.Close();
             MessageBox.Show("发生严重错误：" + msg + Environment.NewLine + "详细信息已复制到剪贴板", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
             Environment.Exit(1);
         }

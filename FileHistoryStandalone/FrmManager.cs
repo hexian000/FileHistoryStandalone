@@ -54,8 +54,13 @@ namespace FileHistoryStandalone
             }
             if (Program.CommandLine.Length > 0)
             {
-                string arg0 = Program.CommandLine[0].ToLower();
-                if (arg0 == "--hide" || arg0 == "-h") Hide();
+                foreach (var i in Program.CommandLine)
+                {
+                    if (i.StartsWith("--debug:"))
+                        Program.log = new StreamWriter(new FileStream(i.Substring(8), FileMode.Create), Encoding.UTF8);
+                    else if (i == "--hide") Hide();
+                    else MessageBox.Show($"无法识别的参数 - “{i}”");
+                }
             }
         }
 

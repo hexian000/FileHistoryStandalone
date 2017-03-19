@@ -31,17 +31,43 @@ namespace FileHistoryStandalone
 
             internal void SourceRename(string newName)
             {
-                Source = newName;
-                string newFullName = Path.Combine(Path.GetDirectoryName(FullName), Path.GetFileNameWithoutExtension(Source) + "_" + new FileInfo(Source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(Source));
-                if (File.Exists(Win32PathPrefix + newFullName)) File.Delete(Win32PathPrefix + newFullName);
-                File.Move(Win32PathPrefix + FullName, Win32PathPrefix + newFullName);
-                FullName = newFullName;
+                try
+                {
+                    Source = newName;
+                    string newFullName = Path.Combine(Path.GetDirectoryName(FullName), Path.GetFileNameWithoutExtension(Source) + "_" + new FileInfo(Source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(Source));
+                    if (File.Exists(Win32PathPrefix + newFullName)) File.Delete(Win32PathPrefix + newFullName);
+                    File.Move(Win32PathPrefix + FullName, Win32PathPrefix + newFullName);
+                    FullName = newFullName;
+                }
+                catch (Exception ex)
+                {
+                    WriteDebugLog("FATAL", ex);
+                    WriteDebugLog("DEBUG", $"this.FullName = {FullName}");
+                    WriteDebugLog("DEBUG", $"this.FullName exists = {File.Exists(FullName)}");
+                    WriteDebugLog("DEBUG", $"this.Source = {Source}");
+                    WriteDebugLog("DEBUG", $"this.Source exists = {File.Exists(Source)}");
+                    WriteDebugLog("DEBUG", $"this.Length = {Length}");
+                    DoUnhandledException(ex);
+                }
             }
 
             internal void SourceRenameDir(string oldName, string newName)
             {
-                Source = newName + Source.Substring(oldName.Length);
-                FullName = newName + FullName.Substring(oldName.Length);
+                try
+                {
+                    Source = newName + Source.Substring(oldName.Length);
+                    FullName = newName + FullName.Substring(oldName.Length);
+                }
+                catch (Exception ex)
+                {
+                    WriteDebugLog("FATAL", ex);
+                    WriteDebugLog("DEBUG", $"this.FullName = {FullName}");
+                    WriteDebugLog("DEBUG", $"this.FullName exists = {File.Exists(FullName)}");
+                    WriteDebugLog("DEBUG", $"this.Source = {Source}");
+                    WriteDebugLog("DEBUG", $"this.Source exists = {File.Exists(Source)}");
+                    WriteDebugLog("DEBUG", $"this.Length = {Length}");
+                    DoUnhandledException(ex);
+                }
             }
 
             public string FullName { get; private set; }
@@ -75,7 +101,11 @@ namespace FileHistoryStandalone
             {
                 dirs = Directory.EnumerateDirectories(path);
             }
-            catch { dirs = new List<string>(0); }
+            catch (Exception ex)
+            {
+                WriteDebugLog("WARNING", ex);
+                dirs = new List<string>(0);
+            }
             foreach (var dir in dirs)
                 foreach (var file in EnumerateRepoFiles(dir))
                     yield return file;
@@ -85,7 +115,11 @@ namespace FileHistoryStandalone
                 DirectoryInfo thisdir = new DirectoryInfo(path);
                 files = thisdir.EnumerateFiles();
             }
-            catch { files = new List<FileInfo>(0); }
+            catch (Exception ex)
+            {
+                WriteDebugLog("WARNING", ex);
+                files = new List<FileInfo>(0);
+            }
             foreach (var file in files)
             {
                 RepoFile f = null;
@@ -93,7 +127,10 @@ namespace FileHistoryStandalone
                 {
                     f = new RepoFile(file, RepoPath.Length);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    WriteDebugLog("WARNING", ex);
+                }
                 if (f != null) yield return f;
             }
         }
@@ -148,29 +185,32 @@ namespace FileHistoryStandalone
 
         public void MakeCopy(string source)
         {
-            if (source.StartsWith(Win32PathPrefix)) source = source.Substring(4);
-            string dir;
-            if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
-            // else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
-            else throw new ArgumentException("不支持的路径格式", nameof(source));
-            long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
-            if (sizeOverflow > 0) Trim(sizeOverflow);
-            Directory.CreateDirectory(Win32PathPrefix + dir);
-            string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
             try
             {
+                if (source.StartsWith(Win32PathPrefix)) source = source.Substring(4);
+                string dir;
+                if (source[1] == ':') dir = Path.Combine(RepoPath, source[0] + Path.GetDirectoryName(source).Substring(2));
+                // else if (source.StartsWith(Path.DirectorySeparatorChar.ToString())) dir = Path.Combine(RepoPath, '_' + Path.GetDirectoryName(source).Substring(1));
+                else throw new ArgumentException("不支持的路径格式", nameof(source));
+                long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
+                if (sizeOverflow > 0) Trim(sizeOverflow);
+                string newPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(source) + "_" + new FileInfo(source).LastWriteTimeUtc.ToFileTimeUtc().ToString("X") + Path.GetExtension(source));
+                WriteDebugLog("INFO", $"Copy {source} => {newPath}");
+                Directory.CreateDirectory(Win32PathPrefix + dir);
                 File.Copy(Win32PathPrefix + source, Win32PathPrefix + newPath, true);
                 AddRepoFile(new RepoFile(new FileInfo(newPath), RepoPath.Length));
                 CopyMade?.Invoke(this, source);
             }
             catch (IOException ex)
             {
-                Debug.Print(ex.Message);
+                WriteDebugLog("FATAL", ex);
+                DoUnhandledException(ex);
             }
         }
 
         public void Rename(string source, string newSource)
         {
+            WriteDebugLog("INFO", $"Rename {source} => {newSource}");
             string src = GetIdByName(source);
             bool exist = false;
             lock (Files)
@@ -204,6 +244,7 @@ namespace FileHistoryStandalone
 
         public void RenameDir(string source, string newSource)
         {
+            WriteDebugLog("INFO", $"RenameDir {source} => {newSource}");
             if (source[1] != ':') throw new ArgumentException("不支持的路径格式", nameof(source));
             if (newSource[1] != ':') throw new ArgumentException("不支持的路径格式", nameof(newSource));
             string src = GetIdByName(source) + Path.DirectorySeparatorChar,

@@ -67,14 +67,24 @@ namespace FileHistoryStandalone
         {
             foreach (var i in DocPath)
             {
-                foreach (var doc in Program.EnumerateFiles(i))
+                Program.WriteDebugLog("INFO", $"ScannLib start at {i}");
+                try
                 {
-                    string id = doc.FullName.ToLowerInvariant();
-                    if (Repo.HasCopy(id))
+                    foreach (var doc in Program.EnumerateFiles(i))
                     {
-                        if (Repo.GetLatestCopyTimeUtc(id) < doc.LastWriteTimeUtc) Repo.MakeCopy(doc.FullName);
+                        string id = doc.FullName.ToLowerInvariant();
+                        Program.WriteDebugLog("VERBOSE", $"ScanLib id={id}");
+                        if (Repo.HasCopy(id))
+                        {
+                            if (Repo.GetLatestCopyTimeUtc(id) < doc.LastWriteTimeUtc) Repo.MakeCopy(doc.FullName);
+                        }
+                        else Repo.MakeCopy(doc.FullName);
                     }
-                    else Repo.MakeCopy(doc.FullName);
+                }
+                catch (Exception ex)
+                {
+                    Program.WriteDebugLog("FATAL", ex);
+                    Program.DoUnhandledException(ex);
                 }
             }
         }
