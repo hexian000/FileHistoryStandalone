@@ -20,9 +20,10 @@ namespace FileHistoryStandalone
         {
             if (log == null) return;
             log.Write($"{DateTime.Now.ToString("yyyyMMddHHmmss")}\t{tag}\t");
-            Exception ex = message as Exception;
-            if (ex != null)
+            if (message is Exception ex)
                 log.WriteLine($"{ex.GetType().Name}: {ex.Message} {ex.StackTrace}");
+            else if (message is string str)
+                log.WriteLine($"{str}");
             else if (message != null)
                 log.WriteLine($"{message.GetType().Name}: {message.ToString()}");
             else

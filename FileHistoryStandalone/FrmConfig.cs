@@ -77,6 +77,7 @@ namespace FileHistoryStandalone
             }
             catch (Exception ex)
             {
+                Program.WriteDebugLog("ERROR", ex);
                 MessageBox.Show(this, ex.Message, "设置", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.None;
                 SetBusyUI();

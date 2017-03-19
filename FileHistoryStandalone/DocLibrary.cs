@@ -73,7 +73,7 @@ namespace FileHistoryStandalone
                     foreach (var doc in Program.EnumerateFiles(i))
                     {
                         string id = doc.FullName.ToLowerInvariant();
-                        Program.WriteDebugLog("VERBOSE", $"ScanLib id={id}");
+                        // Program.WriteDebugLog("VERBOSE", $"ScanLib id={id}");
                         if (Repo.HasCopy(id))
                         {
                             if (Repo.GetLatestCopyTimeUtc(id) < doc.LastWriteTimeUtc) Repo.MakeCopy(doc.FullName);
@@ -93,6 +93,8 @@ namespace FileHistoryStandalone
         {
             if (e.ChangeType == WatcherChangeTypes.Created
             || e.ChangeType == WatcherChangeTypes.Changed)
+            {
+                Program.WriteDebugLog("INFO", $"Watcher {e.ChangeType}: {e.FullPath}");
                 lock (OperBuff)
                 {
                     bool found = false;
@@ -109,6 +111,7 @@ namespace FileHistoryStandalone
                     }
                     if (!found) OperBuff.Add(new OperBufItem(e));
                 }
+            }
         }
 
         private void Watcher_Renamed(object sender, RenamedEventArgs e)
@@ -136,8 +139,10 @@ namespace FileHistoryStandalone
 
         private void Sync(bool flush = false)
         {
+            if (flush) Program.WriteDebugLog("INFO", "Flush");
             lock (OperBuff)
             {
+                if (OperBuff.Count > 0) Program.WriteDebugLog("INFO", "Sync");
                 List<OperBufItem> alive = new List<OperBufItem>();
                 foreach (var i in OperBuff)
                 {
@@ -148,11 +153,13 @@ namespace FileHistoryStandalone
                         if (e.ChangeType == WatcherChangeTypes.Created
                         || e.ChangeType == WatcherChangeTypes.Changed)
                         {
+                            Program.WriteDebugLog("INFO", $"Sync Copy {e.ChangeType}: {e.FullPath}");
                             if (File.Exists(e.FullPath)) Repo.MakeCopy(e.FullPath);
                         }
                         else if (e.ChangeType == WatcherChangeTypes.Renamed)
                         {
-                            var e2 = (RenamedEventArgs)i.Args;
+                            var e2 = (RenamedEventArgs)e;
+                            Program.WriteDebugLog("INFO", $"Sync Rename {e2.ChangeType}: {e2.OldFullPath} => {e2.FullPath}");
                             if (File.Exists(e2.FullPath)) Repo.Rename(e2.OldFullPath, e2.FullPath);
                             else if (Directory.Exists(e2.FullPath)) Repo.RenameDir(e2.OldFullPath, e2.FullPath);
                         }
