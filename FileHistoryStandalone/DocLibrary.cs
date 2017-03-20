@@ -139,10 +139,9 @@ namespace FileHistoryStandalone
 
         private void Sync(bool flush = false)
         {
+            if (flush) Program.WriteDebugLog("INFO", "Flush begin");
             lock (OperBuff)
             {
-                if (flush) Program.WriteDebugLog("INFO", "Flush");
-                else if (OperBuff.Count > 0) Program.WriteDebugLog("INFO", "Sync");
                 List<OperBufItem> alive = new List<OperBufItem>();
                 foreach (var i in OperBuff)
                 {

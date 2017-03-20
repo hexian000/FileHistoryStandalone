@@ -91,5 +91,11 @@ namespace FileHistoryStandalone
             if (isBusy) Text = "正在读取存档库";
             else Text = "设置";
         }
+
+        private void FrmConfig_Load(object sender, EventArgs e)
+        {
+            TxtDocPath.Text = Properties.Settings.Default.DocPath;
+            TxtRepo.Text = Properties.Settings.Default.Repo;
+        }
     }
 }

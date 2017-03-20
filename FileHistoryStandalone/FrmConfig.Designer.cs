@@ -176,6 +176,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "设置";
+            this.Load += new System.EventHandler(this.FrmConfig_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
