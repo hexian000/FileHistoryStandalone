@@ -296,9 +296,15 @@ namespace FileHistoryStandalone
             {
                 List<RepoFile> vers = Files[id];
                 if (vers.Count == 1)
+                {
+                    WriteDebugLog("INFO", $"Delete file id={id}");
                     Files.Remove(id);
+                }
                 else
+                {
+                    WriteDebugLog("INFO", $"Delete version of id={id}");
                     vers.Remove(version);
+                }
             }
             RepoSize -= version.Length;
         }
@@ -358,7 +364,7 @@ namespace FileHistoryStandalone
                 {
                     lenTotal += i.Length;
                     try { DeleteVersion(i); }
-                    catch { }
+                    catch (Exception ex) { WriteDebugLog("WARNING", ex); }
                 }
                 if (spaceNeeded > 0)
                     if (lenTotal >= spaceNeeded) break;
