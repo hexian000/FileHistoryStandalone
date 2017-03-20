@@ -198,6 +198,10 @@ namespace FileHistoryStandalone
                 WriteDebugLog("INFO", $"Copy {source} => {newPath}");
                 Directory.CreateDirectory(Win32PathPrefix + dir);
                 File.Copy(Win32PathPrefix + source, Win32PathPrefix + newPath, true);
+                var srcAttr = new FileInfo(Win32PathPrefix + source);
+                srcAttr.Attributes = srcAttr.Attributes & ~FileAttributes.Archive;
+                var attr = new FileInfo(Win32PathPrefix + newPath);
+                attr.Attributes = attr.Attributes & ~FileAttributes.Archive | FileAttributes.ReadOnly;
                 AddRepoFile(new RepoFile(new FileInfo(newPath), RepoPath.Length));
                 CopyMade?.Invoke(this, source);
             }
@@ -290,6 +294,8 @@ namespace FileHistoryStandalone
 
         public void DeleteVersion(RepoFile version)
         {
+            var attr = new FileInfo(Win32PathPrefix + version.FullName);
+            attr.Attributes = attr.Attributes & ~FileAttributes.ReadOnly;
             File.Delete(Win32PathPrefix + version.FullName);
             string id = GetIdByName(version.Source);
             lock (Files)
@@ -308,7 +314,13 @@ namespace FileHistoryStandalone
             }
             RepoSize -= version.Length;
         }
-        public void SaveAs(RepoFile file, string to, bool overwrite = false) => File.Copy(Win32PathPrefix + file.FullName, to, overwrite);
+
+        public void SaveAs(RepoFile file, string to, bool overwrite = false)
+        {
+            File.Copy(Win32PathPrefix + file.FullName, to, overwrite);
+            var attr = new FileInfo(Win32PathPrefix + file.FullName);
+            attr.Attributes = attr.Attributes & ~FileAttributes.Archive & ~FileAttributes.ReadOnly;
+        }
 
         public IEnumerable<DateTime> EnumrateCopies(string source)
         {
