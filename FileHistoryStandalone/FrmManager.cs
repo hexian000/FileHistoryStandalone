@@ -52,22 +52,12 @@ namespace FileHistoryStandalone
                     menuStrip1.Invoke(new Action(() => 寻找版本FToolStripMenuItem.Enabled = true));
                 }).Start();
             }
-            if (Program.CommandLine.Length > 0)
-            {
-                foreach (var i in Program.CommandLine)
-                {
-                    if (i.StartsWith("--debug:"))
-                        Program.log = new StreamWriter(new FileStream(i.Substring(8), FileMode.Create), Encoding.UTF8);
-                    else if (i == "--hide") Hide();
-                    else MessageBox.Show($"无法识别的参数 - “{i}”");
-                }
-            }
         }
 
         private void 另存为AToolStripMenuItem_Click(object sender, EventArgs e)
         {
             foreach (ListViewItem it in LvwFiles.SelectedItems)
-                if (it.Tag is Repository.RepoFile ver)
+                if (it.Tag is string ver)
                 {
                     if (SfdSaveAs.ShowDialog() == DialogResult.OK)
                         Program.Repo.SaveAs(ver, SfdSaveAs.FileName, true);
@@ -78,7 +68,7 @@ namespace FileHistoryStandalone
         private void 删除DToolStripMenuItem_Click(object sender, EventArgs e)
         {
             foreach (ListViewItem it in LvwFiles.SelectedItems)
-                if (it.Tag is Repository.RepoFile ver)
+                if (it.Tag is string ver)
                 {
                     if (MessageBox.Show(this, "确实要删除这个版本吗？", Application.ProductName,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Question,
@@ -136,6 +126,16 @@ namespace FileHistoryStandalone
         private void FrmManager_Load(object sender, EventArgs e)
         {
             NicTray.Icon = Icon;
+            if (Program.CommandLine.Length > 0)
+            {
+                foreach (var i in Program.CommandLine)
+                {
+                    if (i.StartsWith("--debug:"))
+                        Program.log = new StreamWriter(new FileStream(i.Substring(8), FileMode.Create), Encoding.UTF8);
+                    else if (i == "--hide") Hide();
+                    else MessageBox.Show($"无法识别的参数 - “{i}”");
+                }
+            }
         }
 
         private void FrmManager_FormClosing(object sender, FormClosingEventArgs e)
@@ -145,7 +145,7 @@ namespace FileHistoryStandalone
                 e.Cancel = true;
                 MessageBox.Show(this, "工作中，现在不能退出", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
-            else Program.DocLib.Dispose();
+            else Program.DocLib?.Dispose();
         }
 
         private void 寻找版本FToolStripMenuItem_Click(object sender, EventArgs e)
@@ -156,11 +156,10 @@ namespace FileHistoryStandalone
                 string file = OfdFind.FileName.Trim();
                 LvwFiles.BeginUpdate();
                 LvwFiles.Items.Clear();
-                var vers = Program.Repo.FindVersions(file);
-                foreach (var ver in vers)
+                foreach (var ver in Program.Repo.FindVersions(file))
                 {
-                    var it = new ListViewItem(ver.LastModifiedTimeUtc.ToLocalTime().ToString());
-                    it.SubItems.Add(ver.Length.ToString() + "字节");
+                    var it = new ListViewItem(Program.Repo.NameRepo2Time(ver).ToLocalTime().ToString());
+                    it.SubItems.Add(new FileInfo(ver).Length.ToString() + "字节");
                     it.Tag = ver;
                     LvwFiles.Items.Add(it);
                 }

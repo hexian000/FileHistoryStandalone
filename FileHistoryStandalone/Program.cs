@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -19,16 +21,19 @@ namespace FileHistoryStandalone
         internal static void WriteDebugLog(string tag, object message)
         {
             if (log == null) return;
-            log.Write($"{DateTime.Now.ToString("yyyyMMddHHmmss")}\t{tag}\t");
-            if (message is Exception ex)
-                log.WriteLine($"{ex.GetType().Name}: {ex.Message} {ex.StackTrace}");
-            else if (message is string str)
-                log.WriteLine($"{str}");
-            else if (message != null)
-                log.WriteLine($"{message.GetType().Name}: {message.ToString()}");
-            else
-                log.WriteLine($"null");
-            log.Flush();
+            lock (log)
+            {
+                log.Write($"{DateTime.Now.ToString("yyyyMMddHHmmss")}\t{tag}\t");
+                if (message is Exception ex)
+                    log.WriteLine($"{ex.GetType().Name}: {ex.Message} {ex.StackTrace}");
+                else if (message is string str)
+                    log.WriteLine($"{str}");
+                else if (message != null)
+                    log.WriteLine($"{message.GetType().Name}: {message.ToString()}");
+                else
+                    log.WriteLine($"null");
+                log.Flush();
+            }
         }
 
         /// <summary>
@@ -40,9 +45,10 @@ namespace FileHistoryStandalone
             CommandLine = args;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            Application.ThreadException += Application_ThreadException;
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            //Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            //Application.ThreadException += Application_ThreadException;
+            //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
             Application.Run(new FrmManager());
         }
 
@@ -67,7 +73,14 @@ namespace FileHistoryStandalone
                 log.AppendLine("Message: " + msg);
                 log.AppendLine("Source: " + ex.Source);
                 log.AppendLine("StackTrace: " + ex.StackTrace);
-                Clipboard.SetText(log.ToString());
+                var th = new Thread((o) =>
+                  {
+                      Clipboard.SetText(o.ToString());
+                  });
+                th.SetApartmentState(ApartmentState.STA);
+                th.Start(log.ToString());
+                th.Join();
+                th = null;
             }
             else msg = exception.ToString();
             WriteDebugLog("BUGCHK", msg);
@@ -76,23 +89,32 @@ namespace FileHistoryStandalone
             Environment.Exit(1);
         }
 
-        internal static string GetIdByName(string fullName)
+        internal static string NtPath(string Win32Path)
         {
-            string name = fullName.Trim().ToLowerInvariant();
-            if (name.StartsWith(Win32PathPrefix)) name = name.Substring(4);
-            return name;
+            if (Win32Path.StartsWith(Win32PathPrefix)) return Win32Path.Substring(Win32PathPrefix.Length);
+            else return Win32Path;
         }
 
-        internal static IEnumerable<FileInfo> EnumerateFiles(string path)
+        internal static string Win32Path(string NtPath)
+        {
+            if (!NtPath.StartsWith(Win32PathPrefix)) return Win32PathPrefix + NtPath;
+            else return NtPath;
+        }
+
+        internal static IEnumerable<FileInfo> EnumerateTreeFiles(string path)
         {
             IEnumerable<string> dirs;
             try
             {
                 dirs = Directory.EnumerateDirectories(path);
             }
-            catch { dirs = new List<string>(0); }
+            catch (Exception ex)
+            {
+                WriteDebugLog("WARNING", ex);
+                dirs = new List<string>(0);
+            }
             foreach (var dir in dirs)
-                foreach (var file in EnumerateFiles(dir))
+                foreach (var file in EnumerateTreeFiles(dir))
                     yield return file;
             IEnumerable<FileInfo> files;
             try
@@ -100,7 +122,11 @@ namespace FileHistoryStandalone
                 DirectoryInfo thisdir = new DirectoryInfo(path);
                 files = thisdir.EnumerateFiles();
             }
-            catch { files = new List<FileInfo>(0); }
+            catch (Exception ex)
+            {
+                WriteDebugLog("WARNING", ex);
+                files = new List<FileInfo>(0);
+            }
             foreach (var file in files)
             {
                 yield return file;
@@ -111,13 +137,15 @@ namespace FileHistoryStandalone
         {
             try
             {
-                if (Directory.EnumerateFileSystemEntries(path).Count() == 0)
-                    Directory.Delete(path);
-                else
-                    foreach (var dir in Directory.EnumerateDirectories(path))
-                        TrimEmptyDirs(dir);
+                bool empty = true;
+                foreach (var dir in Directory.EnumerateDirectories(path))
+                {
+                    TrimEmptyDirs(dir);
+                    empty = false;
+                }
+                if (empty) Directory.Delete(path);
             }
-            catch { }
+            catch (Exception ex) { WriteDebugLog("ERROR", ex); }
         }
     }
 }

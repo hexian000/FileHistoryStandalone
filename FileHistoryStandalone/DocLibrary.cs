@@ -40,7 +40,7 @@ namespace FileHistoryStandalone
                 if (DocWatcher != null)
                     foreach (var i in DocWatcher) i.Dispose();
                 var libs = new List<string>(value.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
-                var ids = new List<string>(libs.Select(Program.GetIdByName));
+                var ids = new List<string>(libs.Select((s) => s.ToLowerInvariant()));
                 for (var i = 0; i < ids.Count; i++)
                     for (var j = 0; j < i; j++)
                     {
@@ -49,7 +49,6 @@ namespace FileHistoryStandalone
                     }
                 foreach (var path in libs)
                 {
-                    string id = Program.GetIdByName(path);
                     FileSystemWatcher watcher = new FileSystemWatcher(path);
                     watcher.Changed += Watcher_Changed;
                     watcher.Created += Watcher_Changed;
@@ -68,24 +67,24 @@ namespace FileHistoryStandalone
             foreach (var i in DocPath)
             {
                 Program.WriteDebugLog("INFO", $"ScannLib start at {i}");
-                try
+                ScanLibraryInternal(i);
+            }
+        }
+
+        private void ScanLibraryInternal(string path)
+        {
+            try
+            {
+                Repo.Synchronize(path);
+                foreach (var dir in Directory.EnumerateDirectories(path))
                 {
-                    foreach (var doc in Program.EnumerateFiles(i))
-                    {
-                        string id = doc.FullName.ToLowerInvariant();
-                        // Program.WriteDebugLog("VERBOSE", $"ScanLib id={id}");
-                        if (Repo.HasCopy(id))
-                        {
-                            if (Repo.GetLatestCopyTimeUtc(id) < doc.LastWriteTimeUtc) Repo.MakeCopy(doc.FullName);
-                        }
-                        else Repo.MakeCopy(doc.FullName);
-                    }
+                    ScanLibraryInternal(Program.Win32Path(dir));
                 }
-                catch (Exception ex)
-                {
-                    Program.WriteDebugLog("FATAL", ex);
-                    Program.DoUnhandledException(ex);
-                }
+            }
+            catch (Exception ex)
+            {
+                Program.WriteDebugLog("WARNING", ex);
+                Program.DoUnhandledException(ex);
             }
         }
 
