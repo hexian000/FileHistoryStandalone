@@ -66,6 +66,7 @@ namespace FileHistoryStandalone
                 string newPath = NameDoc2Repo(source, new FileInfo(source).LastWriteTimeUtc);
                 WriteDebugLog("INFO", $"Copy {source} => {newPath}");
                 Directory.CreateDirectory(Win32Path(Path.GetDirectoryName(newPath)));
+                if (File.Exists(Win32Path(newPath))) WriteDebugLog("WARNING", $"Overwriting {newPath}");
                 File.Copy(Win32Path(source), Win32Path(newPath), true);
                 var srcAttr = new FileInfo(Win32Path(source));
                 srcAttr.Attributes = srcAttr.Attributes & ~FileAttributes.Archive;
@@ -228,6 +229,7 @@ namespace FileHistoryStandalone
 
         public void Trim(DateTime? deadline, long? spaceNeeded, bool orphanOnly = false)
         {
+            WriteDebugLog("INFO", "Trim: start");
             List<FileInfo> orphan = new List<FileInfo>();
             Dictionary<string, DateTime> LatestWriteTime = new Dictionary<string, DateTime>();
             HashSet<string> ExcludeVer = new HashSet<string>();
@@ -250,6 +252,7 @@ namespace FileHistoryStandalone
             versions.Sort((x, y) => Math.Sign((x.LastWriteTimeUtc - y.LastWriteTimeUtc).Ticks));
             foreach (var i in LatestWriteTime) ExcludeVer.Add(NameDoc2Repo(i.Key, i.Value).ToLowerInvariant());
             LatestWriteTime = null;
+            WriteDebugLog("INFO", "Trim: versions enumerated");
 
             long lenTotal = 0;
             foreach (var i in orphan.Concat(versions))
@@ -261,11 +264,14 @@ namespace FileHistoryStandalone
                 if (spaceNeeded != null)
                     if (lenTotal >= spaceNeeded) break;
                 lenTotal += i.Length;
+                WriteDebugLog("VERBOSE", $"Trim: deleting {i.FullName}");
                 try { DeleteVersion(i.FullName); }
                 catch (Exception ex) { WriteDebugLog("WARNING", ex); }
             }
             orphan = null;
+            WriteDebugLog("INFO", "Trim: empty dirs");
             TrimEmptyDirs(RepoPath);
+            WriteDebugLog("INFO", "Trim: done");
         }
 
         /// <summary>
