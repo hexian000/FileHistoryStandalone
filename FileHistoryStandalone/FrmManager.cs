@@ -28,6 +28,16 @@ namespace FileHistoryStandalone
 
         private void FrmManager_Shown(object sender, EventArgs e)
         {
+            if (Program.CommandLine.Length > 0)
+            {
+                foreach (var i in Program.CommandLine)
+                {
+                    if (i.StartsWith("--debug:"))
+                        Program.log = new StreamWriter(new FileStream(i.Substring(8), FileMode.Create), Encoding.UTF8);
+                    else if (i == "--hide") Hide();
+                    else MessageBox.Show($"无法识别的参数 - “{i}”");
+                }
+            }
             if (Properties.Settings.Default.FirstRun)
             {
                 if (!Reconfigure())
@@ -126,16 +136,6 @@ namespace FileHistoryStandalone
         private void FrmManager_Load(object sender, EventArgs e)
         {
             NicTray.Icon = Icon;
-            if (Program.CommandLine.Length > 0)
-            {
-                foreach (var i in Program.CommandLine)
-                {
-                    if (i.StartsWith("--debug:"))
-                        Program.log = new StreamWriter(new FileStream(i.Substring(8), FileMode.Create), Encoding.UTF8);
-                    else if (i == "--hide") Hide();
-                    else MessageBox.Show($"无法识别的参数 - “{i}”");
-                }
-            }
         }
 
         private void FrmManager_FormClosing(object sender, FormClosingEventArgs e)

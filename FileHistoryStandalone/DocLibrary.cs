@@ -84,7 +84,6 @@ namespace FileHistoryStandalone
             catch (Exception ex)
             {
                 Program.WriteDebugLog("WARNING", ex);
-                Program.DoUnhandledException(ex);
             }
         }
 
@@ -92,25 +91,26 @@ namespace FileHistoryStandalone
         {
             if (e.ChangeType == WatcherChangeTypes.Created
             || e.ChangeType == WatcherChangeTypes.Changed)
-            {
-                Program.WriteDebugLog("INFO", $"Watcher {e.ChangeType}: {e.FullPath}");
-                lock (OperBuff)
+                if (File.Exists(e.FullPath))
                 {
-                    bool found = false;
-                    foreach (var i in OperBuff)
+                    Program.WriteDebugLog("INFO", $"Watcher {e.ChangeType}: {e.FullPath}");
+                    lock (OperBuff)
                     {
-                        if ((i.Args.ChangeType == WatcherChangeTypes.Created
-                            || e.ChangeType == WatcherChangeTypes.Changed)
-                            && i.Args.FullPath.ToLowerInvariant() == e.FullPath.ToLowerInvariant())
+                        bool found = false;
+                        foreach (var i in OperBuff)
                         {
-                            i.Countdown = 5;
-                            found = true;
-                            break;
+                            if ((i.Args.ChangeType == WatcherChangeTypes.Created
+                                || e.ChangeType == WatcherChangeTypes.Changed)
+                                && i.Args.FullPath.ToLowerInvariant() == e.FullPath.ToLowerInvariant())
+                            {
+                                i.Countdown = 5;
+                                found = true;
+                                break;
+                            }
                         }
+                        if (!found) OperBuff.Add(new OperBufItem(e));
                     }
-                    if (!found) OperBuff.Add(new OperBufItem(e));
                 }
-            }
         }
 
         private void Watcher_Renamed(object sender, RenamedEventArgs e)
