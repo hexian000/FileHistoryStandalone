@@ -66,7 +66,12 @@ namespace FileHistoryStandalone
                 string newPath = NameDoc2Repo(source, new FileInfo(source).LastWriteTimeUtc);
                 WriteDebugLog("INFO", $"Copy {source} => {newPath}");
                 Directory.CreateDirectory(Win32Path(Path.GetDirectoryName(newPath)));
-                if (File.Exists(Win32Path(newPath))) WriteDebugLog("WARNING", $"Overwriting {newPath}");
+                if (File.Exists(Win32Path(newPath)))
+                {
+                    WriteDebugLog("WARNING", $"Overwriting {newPath}");
+                    var ovwAttr = new FileInfo(Win32Path(newPath));
+                    ovwAttr.Attributes = ovwAttr.Attributes & ~FileAttributes.ReadOnly;
+                }
                 File.Copy(Win32Path(source), Win32Path(newPath), true);
                 var srcAttr = new FileInfo(Win32Path(source));
                 srcAttr.Attributes = srcAttr.Attributes & ~FileAttributes.Archive;
