@@ -42,9 +42,15 @@ namespace FileHistoryStandalone
         [STAThread]
         static void Main(string[] args)
         {
-            CommandLine = args;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            CommandLine = args;
+            var single = new Mutex(true, "FileHistoryStandalone", out bool created);
+            if (!created)
+            {
+                MessageBox.Show("FileHistoryStandalone已经在运行", "FileHistoryStandalone", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             //Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             //Application.ThreadException += Application_ThreadException;
             //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
