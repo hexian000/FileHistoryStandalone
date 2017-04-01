@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using static FileHistoryStandalone.Program;
 
@@ -21,7 +22,7 @@ namespace FileHistoryStandalone
             get { return RepoMaxSize; }
             set
             {
-                if (value < RepoSize) Trim(RepoSize - value);
+                if (value < RepoSize) Trim(null, RepoSize - value);
                 RepoMaxSize = value;
             }
         }
@@ -62,7 +63,7 @@ namespace FileHistoryStandalone
             {
                 source = NtPath(source);
                 long sizeOverflow = RepoSize + new FileInfo(source).Length - RepoMaxSize;
-                if (sizeOverflow > 0) Trim(sizeOverflow);
+                if (sizeOverflow > 0) Trim(null, sizeOverflow);
                 string newPath = NameDoc2Repo(source, new FileInfo(source).LastWriteTimeUtc);
                 WriteDebugLog("INFO", $"Copy {source} => {newPath}");
                 Directory.CreateDirectory(Win32Path(Path.GetDirectoryName(newPath)));
@@ -211,28 +212,28 @@ namespace FileHistoryStandalone
             attr.Attributes = attr.Attributes & ~FileAttributes.Archive & ~FileAttributes.ReadOnly;
         }
 
-        public void Trim()
+        public void Trim(CancellationToken? cancel)
         {
-            Trim(null, null, true);
+            Trim(cancel, null, null, true);
         }
 
-        public void TrimFull()
+        public void TrimFull(CancellationToken? cancel)
         {
-            Trim(null, null);
+            Trim(cancel, null, null);
         }
 
-        public void Trim(long spaceNeeded)
+        public void Trim(CancellationToken? cancel, long spaceNeeded)
         {
-            Trim(null, spaceNeeded);
+            Trim(cancel, null, spaceNeeded);
         }
 
-        public void Trim(TimeSpan howOld)
+        public void Trim(CancellationToken? cancel, TimeSpan howOld)
         {
             DateTime deadline = DateTime.UtcNow - howOld;
-            Trim(deadline, null);
+            Trim(cancel, deadline, null);
         }
 
-        public void Trim(DateTime? deadline, long? spaceNeeded, bool orphanOnly = false)
+        public void Trim(CancellationToken? cancel, DateTime? deadline, long? spaceNeeded, bool orphanOnly = false)
         {
             WriteDebugLog("INFO", "Trim: start");
             List<FileInfo> orphan = new List<FileInfo>();
@@ -252,6 +253,12 @@ namespace FileHistoryStandalone
                         LatestWriteTime[doc] = time;
                 }
                 else { LatestWriteTime.Add(doc, time); }
+                if (cancel != null)
+                    if (cancel.Value.IsCancellationRequested)
+                    {
+                        WriteDebugLog("INFO", "Trim: cancelling");
+                        return;
+                    }
             }
             orphan.Sort((x, y) => Math.Sign((x.LastWriteTimeUtc - y.LastWriteTimeUtc).Ticks));
             versions.Sort((x, y) => Math.Sign((x.LastWriteTimeUtc - y.LastWriteTimeUtc).Ticks));
@@ -272,6 +279,12 @@ namespace FileHistoryStandalone
                 WriteDebugLog("VERBOSE", $"Trim: deleting {i.FullName}");
                 try { DeleteVersion(i.FullName); }
                 catch (Exception ex) { WriteDebugLog("WARNING", ex); }
+                if (cancel != null)
+                    if (cancel.Value.IsCancellationRequested)
+                    {
+                        WriteDebugLog("INFO", "Trim: cancelling");
+                        return;
+                    }
             }
             orphan = null;
             WriteDebugLog("INFO", "Trim: empty dirs");

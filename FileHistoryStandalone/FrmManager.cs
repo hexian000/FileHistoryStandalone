@@ -19,7 +19,7 @@ namespace FileHistoryStandalone
             InitializeComponent();
         }
 
-        private int busy = 0;
+        private CancellationTokenSource cancelSrc = null;
 
         private void NicTray_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -118,7 +118,7 @@ namespace FileHistoryStandalone
         {
             if (ScanThread != null) return;
             if (InvokeRequired) Invoke(new Action(() => TsslStatus.Text = "已启动文档库扫描"));
-            Interlocked.Increment(ref busy);
+            cancelSrc = new CancellationTokenSource();
             ScanThread = new Thread(() =>
               {
                   Program.DocLib.ScanLibrary();
@@ -128,7 +128,8 @@ namespace FileHistoryStandalone
                       TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成";
                   }));
                   ScanThread = null;
-                  Interlocked.Decrement(ref busy);
+                  cancelSrc.Dispose();
+                  cancelSrc = null;
               });
             ScanThread.Start();
         }
@@ -140,12 +141,14 @@ namespace FileHistoryStandalone
 
         private void FrmManager_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (busy > 0)
+            if (cancelSrc != null)
             {
-                e.Cancel = true;
-                MessageBox.Show(this, "工作中，现在不能退出", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                cancelSrc.Cancel();
+                Thread.Sleep(100);
+                cancelSrc.Dispose();
+                cancelSrc = null;
             }
-            else Program.DocLib?.Dispose();
+            Program.DocLib?.Dispose();
         }
 
         private void 寻找版本FToolStripMenuItem_Click(object sender, EventArgs e)
@@ -174,7 +177,7 @@ namespace FileHistoryStandalone
 
         private bool CheckBusy()
         {
-            if (busy > 0)
+            if (cancelSrc != null)
             {
                 MessageBox.Show(this, "工作中，现在不能执行此动作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
@@ -199,11 +202,12 @@ namespace FileHistoryStandalone
         {
             if (CheckBusy() && TrimPrompt())
             {
-                Interlocked.Increment(ref busy);
+                cancelSrc = new CancellationTokenSource();
                 new Thread(() =>
                 {
-                    Program.Repo.TrimFull();
-                    Interlocked.Decrement(ref busy);
+                    Program.Repo.TrimFull(cancelSrc.Token);
+                    cancelSrc.Dispose();
+                    cancelSrc = null;
                     BeginInvoke(new Action(TrimFinished));
                 }).Start();
             }
@@ -214,11 +218,12 @@ namespace FileHistoryStandalone
 
             if (CheckBusy() && TrimPrompt())
             {
-                Interlocked.Increment(ref busy);
+                cancelSrc = new CancellationTokenSource();
                 new Thread(() =>
                 {
-                    Program.Repo.Trim(new TimeSpan(90, 0, 0, 0));
-                    Interlocked.Decrement(ref busy);
+                    Program.Repo.Trim(cancelSrc.Token);
+                    cancelSrc.Dispose();
+                    cancelSrc = null;
                     BeginInvoke(new Action(TrimFinished));
                 }).Start();
             }
@@ -228,11 +233,12 @@ namespace FileHistoryStandalone
         {
             if (CheckBusy() && TrimPrompt())
             {
-                Interlocked.Increment(ref busy);
+                cancelSrc = new CancellationTokenSource();
                 new Thread(() =>
                 {
-                    Program.Repo.Trim();
-                    Interlocked.Decrement(ref busy);
+                    Program.Repo.Trim(cancelSrc.Token);
+                    cancelSrc.Dispose();
+                    cancelSrc = null;
                     BeginInvoke(new Action(TrimFinished));
                 }).Start();
             }
