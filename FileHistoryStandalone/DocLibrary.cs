@@ -69,6 +69,7 @@ namespace FileHistoryStandalone
                 Program.WriteDebugLog("INFO", $"ScannLib start at {i}");
                 ScanLibraryInternal(i);
             }
+            Program.WriteDebugLog("INFO", "ScannLib complete");
         }
 
         private void ScanLibraryInternal(string path)
@@ -176,6 +177,7 @@ namespace FileHistoryStandalone
         {
             if (!disposedValue)
             {
+                Program.WriteDebugLog("INFO", "DocLibrary disposing");
                 if (disposing)
                 {
                     if (DocWatcher != null)
