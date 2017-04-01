@@ -122,8 +122,8 @@ namespace FileHistoryStandalone
                 if (cancelSrc != null)
                 {
                     cancelSrc.Cancel();
-                    worker.Join();
                 }
+            worker?.Join();
         }
 
         private void ScanLibAsync()
