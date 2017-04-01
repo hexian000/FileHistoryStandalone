@@ -19,7 +19,9 @@ namespace FileHistoryStandalone
             InitializeComponent();
         }
 
+        private object synclock = new object();
         private CancellationTokenSource cancelSrc = null;
+        private Thread worker = null;
 
         private void NicTray_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -107,30 +109,41 @@ namespace FileHistoryStandalone
             {
                 Program.Repo.CopyMade += Repo_CopyMade;
                 Program.Repo.Renamed += Repo_Renamed;
-                if (cancelSrc != null)
-                {
-                    cancelSrc.Cancel();
-                    Thread.Sleep(100);
-                    cancelSrc.Dispose();
-                    cancelSrc = null;
-                }
+                CancelIfWorking();
                 ScanLibAsync();
                 return true;
             }
             return false;
         }
 
+        private void CancelIfWorking()
+        {
+            lock (synclock)
+                if (cancelSrc != null)
+                {
+                    cancelSrc.Cancel();
+                    worker.Join();
+                }
+        }
+
         private void ScanLibAsync()
         {
             if (InvokeRequired) Invoke(new Action(() => TsslStatus.Text = "已启动文档库扫描"));
-            cancelSrc = new CancellationTokenSource();
-            new Thread(() =>
-              {
-                  Program.DocLib.ScanLibrary(cancelSrc.Token);
-                  Invoke(new Action(() => TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成"));
-                  cancelSrc.Dispose();
-                  cancelSrc = null;
-              }).Start();
+            worker = new Thread(() =>
+            {
+                lock (synclock)
+                    cancelSrc = new CancellationTokenSource();
+                Program.DocLib.ScanLibrary(cancelSrc.Token);
+                if (!cancelSrc.Token.IsCancellationRequested)
+                    Invoke(new Action(() => TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成"));
+                lock (synclock)
+                {
+                    cancelSrc.Dispose();
+                    cancelSrc = null;
+                    worker = null;
+                }
+            });
+            worker.Start();
         }
 
         private void FrmManager_Load(object sender, EventArgs e)
@@ -140,13 +153,7 @@ namespace FileHistoryStandalone
 
         private void FrmManager_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (cancelSrc != null)
-            {
-                cancelSrc.Cancel();
-                Thread.Sleep(100);
-                cancelSrc.Dispose();
-                cancelSrc = null;
-            }
+            CancelIfWorking();
             Program.DocLib?.Dispose();
         }
 
@@ -176,7 +183,9 @@ namespace FileHistoryStandalone
 
         private bool CheckBusy()
         {
-            if (cancelSrc != null)
+            bool busy;
+            lock (synclock) busy = cancelSrc != null;
+            if (busy)
             {
                 MessageBox.Show(this, "工作中，现在不能执行此动作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
@@ -201,14 +210,20 @@ namespace FileHistoryStandalone
         {
             if (CheckBusy() && TrimPrompt())
             {
-                cancelSrc = new CancellationTokenSource();
-                new Thread(() =>
-                {
-                    Program.Repo.TrimFull(cancelSrc.Token);
-                    cancelSrc.Dispose();
-                    cancelSrc = null;
-                    BeginInvoke(new Action(TrimFinished));
-                }).Start();
+                worker = new Thread(() =>
+                  {
+                      lock (synclock)
+                          cancelSrc = new CancellationTokenSource();
+                      Program.Repo.TrimFull(cancelSrc.Token);
+                      if (!cancelSrc.Token.IsCancellationRequested)
+                          BeginInvoke(new Action(TrimFinished));
+                      lock (synclock)
+                      {
+                          cancelSrc.Dispose();
+                          cancelSrc = null;
+                      }
+                  });
+                worker.Start();
             }
         }
 
@@ -217,14 +232,20 @@ namespace FileHistoryStandalone
 
             if (CheckBusy() && TrimPrompt())
             {
-                cancelSrc = new CancellationTokenSource();
-                new Thread(() =>
+                worker = new Thread(() =>
                 {
-                    Program.Repo.Trim(cancelSrc.Token);
-                    cancelSrc.Dispose();
-                    cancelSrc = null;
-                    BeginInvoke(new Action(TrimFinished));
-                }).Start();
+                    lock (synclock)
+                        cancelSrc = new CancellationTokenSource();
+                    Program.Repo.Trim(cancelSrc.Token, new TimeSpan(90, 0, 0, 0));
+                    if (!cancelSrc.Token.IsCancellationRequested)
+                        BeginInvoke(new Action(TrimFinished));
+                    lock (synclock)
+                    {
+                        cancelSrc.Dispose();
+                        cancelSrc = null;
+                    }
+                });
+                worker.Start();
             }
         }
 
@@ -232,14 +253,20 @@ namespace FileHistoryStandalone
         {
             if (CheckBusy() && TrimPrompt())
             {
-                cancelSrc = new CancellationTokenSource();
-                new Thread(() =>
+                worker = new Thread(() =>
                 {
+                    lock (synclock)
+                        cancelSrc = new CancellationTokenSource();
                     Program.Repo.Trim(cancelSrc.Token);
-                    cancelSrc.Dispose();
-                    cancelSrc = null;
-                    BeginInvoke(new Action(TrimFinished));
-                }).Start();
+                    if (!cancelSrc.Token.IsCancellationRequested)
+                        BeginInvoke(new Action(TrimFinished));
+                    lock (synclock)
+                    {
+                        cancelSrc.Dispose();
+                        cancelSrc = null;
+                    }
+                });
+                worker.Start();
             }
         }
 

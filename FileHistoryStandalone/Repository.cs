@@ -87,7 +87,7 @@ namespace FileHistoryStandalone
             }
         }
 
-        public void Synchronize(string srcDir)
+        public void Synchronize(string srcDir,CancellationToken cancel)
         {
             Dictionary<string, DateTime> repo = new Dictionary<string, DateTime>();
             string repoDir = PathDoc2Repo(srcDir);
@@ -102,6 +102,7 @@ namespace FileHistoryStandalone
                         if (repo[doc] < date) repo[doc] = date;
                     }
                     else repo[doc] = date;
+                    if (cancel.IsCancellationRequested) return;
                 }
             foreach (var doc in new DirectoryInfo(Win32Path(srcDir)).EnumerateFiles())
             {
@@ -111,6 +112,7 @@ namespace FileHistoryStandalone
                     if (repo[id] < doc.LastWriteTimeUtc) MakeCopy(doc.FullName);
                 }
                 else MakeCopy(doc.FullName);
+                if (cancel.IsCancellationRequested) return;
             }
         }
 

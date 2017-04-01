@@ -81,7 +81,7 @@ namespace FileHistoryStandalone
         {
             try
             {
-                Repo.Synchronize(path);
+                Repo.Synchronize(path, cancel);
                 foreach (var dir in Directory.EnumerateDirectories(path))
                 {
                     if (cancel.IsCancellationRequested) return;
