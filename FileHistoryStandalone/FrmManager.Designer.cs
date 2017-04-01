@@ -54,9 +54,13 @@
             this.删除已删除文件的备份ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除90天以前的版本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.仅保留最新版本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.显示SToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.退出EToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.StatusStripDefault.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
+            this.contextMenuStrip2.SuspendLayout();
             this.SuspendLayout();
             // 
             // StatusStripDefault
@@ -128,6 +132,7 @@
             // 
             // NicTray
             // 
+            this.NicTray.ContextMenuStrip = this.contextMenuStrip2;
             this.NicTray.Text = "File History Standalone";
             this.NicTray.Visible = true;
             this.NicTray.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.NicTray_MouseDoubleClick);
@@ -243,6 +248,28 @@
             this.仅保留最新版本ToolStripMenuItem.Text = "仅保留最新版本";
             this.仅保留最新版本ToolStripMenuItem.Click += new System.EventHandler(this.仅保留最新版本ToolStripMenuItem_Click);
             // 
+            // contextMenuStrip2
+            // 
+            this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.显示SToolStripMenuItem,
+            this.退出EToolStripMenuItem});
+            this.contextMenuStrip2.Name = "contextMenuStrip2";
+            this.contextMenuStrip2.Size = new System.Drawing.Size(116, 48);
+            // 
+            // 显示SToolStripMenuItem
+            // 
+            this.显示SToolStripMenuItem.Name = "显示SToolStripMenuItem";
+            this.显示SToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.显示SToolStripMenuItem.Text = "显示(&S)";
+            this.显示SToolStripMenuItem.Click += new System.EventHandler(this.显示SToolStripMenuItem_Click);
+            // 
+            // 退出EToolStripMenuItem
+            // 
+            this.退出EToolStripMenuItem.Name = "退出EToolStripMenuItem";
+            this.退出EToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.退出EToolStripMenuItem.Text = "退出(&E)";
+            this.退出EToolStripMenuItem.Click += new System.EventHandler(this.退出EToolStripMenuItem_Click);
+            // 
             // FrmManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -265,6 +292,7 @@
             this.contextMenuStrip1.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            this.contextMenuStrip2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -296,6 +324,9 @@
         private System.Windows.Forms.ToolStripMenuItem 删除已删除文件的备份ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 删除90天以前的版本ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 仅保留最新版本ToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
+        private System.Windows.Forms.ToolStripMenuItem 显示SToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 退出EToolStripMenuItem;
     }
 }
 

@@ -20,6 +20,7 @@ namespace FileHistoryStandalone
         }
 
         private object synclock = new object();
+        private bool Exiting = false;
         private CancellationTokenSource cancelSrc = null;
         private Thread worker = null;
 
@@ -153,8 +154,16 @@ namespace FileHistoryStandalone
 
         private void FrmManager_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (e.CloseReason == CloseReason.WindowsShutDown || e.CloseReason == CloseReason.TaskManagerClosing) Exit();
+            e.Cancel = !Exiting;
+            if (!Exiting) Hide();
+        }
+
+        private void Exit()
+        {
             CancelIfWorking();
             Program.DocLib?.Dispose();
+            Exiting = true;
         }
 
         private void 寻找版本FToolStripMenuItem_Click(object sender, EventArgs e)
@@ -282,6 +291,18 @@ namespace FileHistoryStandalone
 
         private void 退出XToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Exit();
+            Close();
+        }
+
+        private void 显示SToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Show();
+        }
+
+        private void 退出EToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Exit();
             Close();
         }
     }
