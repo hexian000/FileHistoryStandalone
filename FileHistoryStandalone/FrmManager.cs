@@ -107,31 +107,30 @@ namespace FileHistoryStandalone
             {
                 Program.Repo.CopyMade += Repo_CopyMade;
                 Program.Repo.Renamed += Repo_Renamed;
+                if (cancelSrc != null)
+                {
+                    cancelSrc.Cancel();
+                    Thread.Sleep(100);
+                    cancelSrc.Dispose();
+                    cancelSrc = null;
+                }
                 ScanLibAsync();
                 return true;
             }
             return false;
         }
 
-        private Thread ScanThread = null;
         private void ScanLibAsync()
         {
-            if (ScanThread != null) return;
             if (InvokeRequired) Invoke(new Action(() => TsslStatus.Text = "已启动文档库扫描"));
             cancelSrc = new CancellationTokenSource();
-            ScanThread = new Thread(() =>
+            new Thread(() =>
               {
-                  Program.DocLib.ScanLibrary();
-                  Invoke(new Action(() =>
-                  {
-                      // NicTray.ShowBalloonTip(5000, "FileHistoryStandalone", "文档库扫描完成", ToolTipIcon.Info);
-                      TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成";
-                  }));
-                  ScanThread = null;
+                  Program.DocLib.ScanLibrary(cancelSrc.Token);
+                  Invoke(new Action(() => TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成"));
                   cancelSrc.Dispose();
                   cancelSrc = null;
-              });
-            ScanThread.Start();
+              }).Start();
         }
 
         private void FrmManager_Load(object sender, EventArgs e)
@@ -251,8 +250,7 @@ namespace FileHistoryStandalone
 
         private void 重新配置RToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (CheckBusy())
-                Reconfigure();
+            Reconfigure();
         }
 
         private void 退出XToolStripMenuItem_Click(object sender, EventArgs e)

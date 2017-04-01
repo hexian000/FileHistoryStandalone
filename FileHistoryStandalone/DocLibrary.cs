@@ -62,24 +62,30 @@ namespace FileHistoryStandalone
             }
         }
 
-        public void ScanLibrary()
+        public void ScanLibrary(CancellationToken cancel)
         {
             foreach (var i in DocPath)
             {
                 Program.WriteDebugLog("INFO", $"ScannLib start at {i}");
-                ScanLibraryInternal(i);
+                ScanLibraryInternal(cancel, i);
+                if (cancel.IsCancellationRequested)
+                {
+                    Program.WriteDebugLog("INFO", "ScannLib cancelling");
+                    return;
+                }
             }
             Program.WriteDebugLog("INFO", "ScannLib complete");
         }
 
-        private void ScanLibraryInternal(string path)
+        private void ScanLibraryInternal(CancellationToken cancel, string path)
         {
             try
             {
                 Repo.Synchronize(path);
                 foreach (var dir in Directory.EnumerateDirectories(path))
                 {
-                    ScanLibraryInternal(Program.Win32Path(dir));
+                    if (cancel.IsCancellationRequested) return;
+                    ScanLibraryInternal(cancel, Program.Win32Path(dir));
                 }
             }
             catch (Exception ex)
