@@ -14,6 +14,7 @@ namespace FileHistoryStandalone
     class Repository
     {
         private string RepoPath;
+        public string RepositoryPath { get; private set; }
         private long RepoSize, RepoMaxSize;
 
         public long Size { get { return RepoSize; } }
@@ -33,6 +34,7 @@ namespace FileHistoryStandalone
         private Repository(string repoPath)
         {
             RepoPath = Win32Path(repoPath);
+            RepositoryPath = NtPath(repoPath);
             RepoSize = 0; RepoMaxSize = long.MaxValue;
         }
 
@@ -90,10 +92,10 @@ namespace FileHistoryStandalone
         public List<KeyValuePair<string, string>> ListDir(string path)
         {
             var ret = new List<KeyValuePair<string, string>>();
-            if (path == null) path = RepoPath;
+            path = RepoPath + path;
             foreach (var dir in Directory.EnumerateDirectories(Win32Path(path)))
             {
-                ret.Add(new KeyValuePair<string, string>(Path.GetFileName(dir), dir));
+                ret.Add(new KeyValuePair<string, string>(NtPath(Path.GetFileName(dir)), NtPath(dir).Substring(RepositoryPath.Length) + Path.DirectorySeparatorChar));
             }
             var hs = new HashSet<string>();
             foreach (var file in Directory.EnumerateFiles(Win32Path(path)))
@@ -101,7 +103,7 @@ namespace FileHistoryStandalone
                 if (!hs.Contains(file.ToLowerInvariant()))
                 {
                     hs.Add(file.ToLowerInvariant());
-                    ret.Add(new KeyValuePair<string, string>(NameRepo2Doc(Path.GetFileName(file)), file));
+                    ret.Add(new KeyValuePair<string, string>(NtPath(NameRepo2Doc(Path.GetFileName(file))), NtPath(file).Substring(RepositoryPath.Length)));
                 }
             }
             return ret;

@@ -104,16 +104,17 @@
             // columnHeader1
             // 
             this.columnHeader1.Text = "名称";
-            this.columnHeader1.Width = 240;
+            this.columnHeader1.Width = 270;
             // 
             // columnHeader2
             // 
             this.columnHeader2.Text = "大小";
+            this.columnHeader2.Width = 90;
             // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "修改时间";
-            this.columnHeader3.Width = 240;
+            this.columnHeader3.Width = 120;
             // 
             // contextMenuStrip1
             // 
@@ -204,19 +205,19 @@
             // 重新配置RToolStripMenuItem
             // 
             this.重新配置RToolStripMenuItem.Name = "重新配置RToolStripMenuItem";
-            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.重新配置RToolStripMenuItem.Text = "重新配置(&R)";
             this.重新配置RToolStripMenuItem.Click += new System.EventHandler(this.重新配置RToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(137, 6);
             // 
             // 退出XToolStripMenuItem
             // 
             this.退出XToolStripMenuItem.Name = "退出XToolStripMenuItem";
-            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.退出XToolStripMenuItem.Text = "退出(&X)";
             this.退出XToolStripMenuItem.Click += new System.EventHandler(this.退出XToolStripMenuItem_Click);
             // 

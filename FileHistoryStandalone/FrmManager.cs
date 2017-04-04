@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,8 +62,68 @@ namespace FileHistoryStandalone
                 };
                 ScanLibAsync();
             }
-            RefreshFileView(null);
+            RefreshFileView(@"\");
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SHFILEINFO
+        {
+            public IntPtr hIcon;
+            public IntPtr iIcon;
+            public uint dwAttributes;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string szDisplayName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+            public string szTypeName;
+        }
+
+        /// <summary>  
+        /// 返回系统设置的图标  
+        /// </summary>  
+        /// <param name="pszPath">文件路径 如果为""  返回文件夹的</param>  
+        /// <param name="dwFileAttributes">0</param>  
+        /// <param name="psfi">结构体</param>  
+        /// <param name="cbSizeFileInfo">结构体大小</param>  
+        /// <param name="uFlags">枚举类型</param>  
+        /// <returns>-1失败</returns>  
+        [DllImport("shell32.dll")]
+        public static extern IntPtr SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, uint cbSizeFileInfo, uint uFlags);
+
+        public enum SHGFI
+        {
+            SHGFI_ICON = 0x100,
+            SHGFI_LARGEICON = 0x0,
+            SHGFI_USEFILEATTRIBUTES = 0x10
+        }
+
+        /// <summary>
+        /// 获取文件图标
+        /// </summary>
+        /// <param name="p_Path">文件全路径</param>  
+        /// <returns>图标</returns>  
+        public static Icon GetFileIcon(string p_Path)
+        {
+            SHFILEINFO _SHFILEINFO = new SHFILEINFO();
+            IntPtr _IconIntPtr = SHGetFileInfo(p_Path, 0, ref _SHFILEINFO, (uint)Marshal.SizeOf(_SHFILEINFO), (uint)(SHGFI.SHGFI_ICON | SHGFI.SHGFI_LARGEICON | SHGFI.SHGFI_USEFILEATTRIBUTES));
+            if (_IconIntPtr.Equals(IntPtr.Zero)) return null;
+            Icon _Icon = Icon.FromHandle(_SHFILEINFO.hIcon);
+            return _Icon;
+        }
+
+        /// <summary>  
+        /// 获取文件夹图标  zgke@sina.com qq:116149  
+        /// </summary>  
+        /// <returns>图标</returns>  
+        public static Icon GetDirectoryIcon()
+        {
+            SHFILEINFO _SHFILEINFO = new SHFILEINFO();
+            IntPtr _IconIntPtr = SHGetFileInfo(@"", 0, ref _SHFILEINFO, (uint)Marshal.SizeOf(_SHFILEINFO), (uint)(SHGFI.SHGFI_ICON | SHGFI.SHGFI_LARGEICON));
+            if (_IconIntPtr.Equals(IntPtr.Zero)) return null;
+            Icon _Icon = Icon.FromHandle(_SHFILEINFO.hIcon);
+            return _Icon;
+        }
+        private Icon DirectoryIcon = GetDirectoryIcon();
+        private Dictionary<string, Icon> IconCache = new Dictionary<string, Icon>();
 
         private void RefreshFileView(string cd)
         {
@@ -72,25 +133,31 @@ namespace FileHistoryStandalone
             ImlIcon.Images.Clear();
             foreach (var i in ret)
             {
-                if (File.Exists(i.Value))
+                if (!i.Value.EndsWith(Path.DirectorySeparatorChar.ToString()))
                 {
-                    var info = new FileInfo(i.Value);
+                    string filePath = Program.Win32Path(Program.Repo.RepositoryPath + i.Value);
+                    var info = new FileInfo(filePath);
                     var item = new ListViewItem(i.Key);
                     item.SubItems.Add(info.Length.ToString());
-                    item.SubItems.Add(info.LastWriteTime.ToString());
-                    ImlIcon.Images.Add(Icon.ExtractAssociatedIcon(Program.NtPath(i.Value)));
+                    item.SubItems.Add(Program.Repo.NameRepo2Time(i.Value).ToString());
+                    string ext = Path.GetExtension(i.Value).ToLowerInvariant();
+                    if (!IconCache.TryGetValue(ext, out Icon icon))
+                    {
+                        icon = Icon.ExtractAssociatedIcon(Program.NtPath(filePath));
+                        IconCache[ext] = icon;
+                    }
+                    ImlIcon.Images.Add(icon);
                     item.ImageIndex = ImlIcon.Images.Count - 1;
                     item.Tag = i.Value;
                     LvwFiles.Items.Add(item);
                 }
-                else if (Directory.Exists(i.Value))
+                else
                 {
-                    var info = new DirectoryInfo(i.Value);
                     var item = new ListViewItem(i.Key);
                     item.SubItems.Add("");
-                    item.SubItems.Add(info.LastWriteTime.ToString());
-                    //ImlIcon.Images.Add(Icon.ExtractAssociatedIcon(Program.NtPath( i.Value)));
-                    //item.ImageIndex = ImlIcon.Images.Count - 1;
+                    item.SubItems.Add("");
+                    ImlIcon.Images.Add(DirectoryIcon);
+                    item.ImageIndex = ImlIcon.Images.Count - 1;
                     item.Tag = i.Value;
                     LvwFiles.Items.Add(item);
                 }
@@ -103,7 +170,9 @@ namespace FileHistoryStandalone
         {
             foreach (ListViewItem i in LvwFiles.SelectedItems)
             {
-                RefreshFileView((string)i.Tag);
+                string relPath = (string)i.Tag;
+                if (relPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                    RefreshFileView(relPath.TrimEnd(Path.DirectorySeparatorChar));
                 break;
             }
         }
@@ -113,14 +182,21 @@ namespace FileHistoryStandalone
             foreach (ListViewItem it in LvwFiles.SelectedItems)
                 if (it.Tag is string ver)
                 {
+                    if (ver.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                    {
+                        MessageBox.Show("您不能对文件夹执行此操作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
                     if (SfdSaveAs.ShowDialog() == DialogResult.OK)
-                        Program.Repo.SaveAs(ver, SfdSaveAs.FileName, true);
+                        Program.Repo.SaveAs(Program.Repo.RepositoryPath + ver, SfdSaveAs.FileName, true);
                     break;
                 }
         }
 
         private void 删除DToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            MessageBox.Show("暂不支持此操作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return;
             foreach (ListViewItem it in LvwFiles.SelectedItems)
                 if (it.Tag is string ver)
                 {
@@ -326,7 +402,7 @@ namespace FileHistoryStandalone
         private void BtnUp_Click(object sender, EventArgs e)
         {
             string cd = TxtPath.Text;
-            if (cd.Contains(Path.DirectorySeparatorChar))
+            if (cd.Substring(1).Contains(Path.DirectorySeparatorChar))
                 RefreshFileView(Path.GetDirectoryName(cd));
         }
     }
