@@ -138,7 +138,7 @@ namespace FileHistoryStandalone
                     string filePath = Program.Win32Path(Program.Repo.RepositoryPath + i.Value);
                     var info = new FileInfo(filePath);
                     var item = new ListViewItem(i.Key);
-                    item.SubItems.Add(info.Length.ToString());
+                    item.SubItems.Add(Program.FormatSize(info.Length));
                     item.SubItems.Add(Program.Repo.NameRepo2Time(i.Value).ToString());
                     string ext = Path.GetExtension(i.Value).ToLowerInvariant();
                     if (!IconCache.TryGetValue(ext, out Icon icon))
@@ -187,6 +187,7 @@ namespace FileHistoryStandalone
                         MessageBox.Show("您不能对文件夹执行此操作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         return;
                     }
+                    SfdSaveAs.FileName = it.Text;
                     if (SfdSaveAs.ShowDialog() == DialogResult.OK)
                         Program.Repo.SaveAs(Program.Repo.RepositoryPath + ver, SfdSaveAs.FileName, true);
                     break;
@@ -402,7 +403,7 @@ namespace FileHistoryStandalone
         private void BtnUp_Click(object sender, EventArgs e)
         {
             string cd = TxtPath.Text;
-            if (cd.Substring(1).Contains(Path.DirectorySeparatorChar))
+            if (cd != Path.DirectorySeparatorChar.ToString())
                 RefreshFileView(Path.GetDirectoryName(cd));
         }
     }

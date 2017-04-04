@@ -153,5 +153,13 @@ namespace FileHistoryStandalone
             }
             catch (Exception ex) { WriteDebugLog("ERROR", ex); }
         }
+
+        internal static string FormatSize(long size)
+        {
+            if (size < 1024) return size + " 字节";
+            else if (size < 1048576) return $"{size / 1024.0:0.00} KB";
+            else if (size < 1073741824) return $"{size / 1048576.0:0.00} MB";
+            else return $"{size / 1073741824.0:0.00} GB";
+        }
     }
 }

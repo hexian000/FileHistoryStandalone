@@ -321,7 +321,7 @@ namespace FileHistoryStandalone
         /// </summary>
         /// <param name="fullName">文档库路径</param>
         /// <returns>NtPath</returns>
-        private string PathDoc2Repo(string fullName)
+        public string PathDoc2Repo(string fullName)
         {
             string name = NtPath(fullName);
             return Path.Combine(RepoPath, name[0] + name.Substring(2));
@@ -332,7 +332,7 @@ namespace FileHistoryStandalone
         /// </summary>
         /// <param name="fullName">存档库路径</param>
         /// <returns>NtPath</returns>
-        private string PathRepo2Doc(string fullName)
+        public string PathRepo2Doc(string fullName)
         {
             string name = NtPath(fullName);
             int len = NtPath(RepoPath).Length;
@@ -345,13 +345,13 @@ namespace FileHistoryStandalone
             return DateTime.FromFileTimeUtc(long.Parse(name.Substring(name.LastIndexOf('_') + 1), System.Globalization.NumberStyles.AllowHexSpecifier));
         }
 
-        private string NameDoc2Repo(string objName, DateTime lastWrite)
+        public string NameDoc2Repo(string objName, DateTime lastWrite)
         {
             return Path.Combine(RepoPath, objName[0] + Path.GetDirectoryName(objName).Substring(2),
                 Path.GetFileNameWithoutExtension(objName) + "_" + lastWrite.ToFileTimeUtc().ToString("X") + Path.GetExtension(objName));
         }
 
-        private string NameRepo2Doc(string objName)
+        public string NameRepo2Doc(string objName)
         {
             string name = Path.GetFileNameWithoutExtension(objName);
             return name.Substring(0, name.LastIndexOf('_')) + Path.GetExtension(objName);
