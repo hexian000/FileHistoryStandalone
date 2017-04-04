@@ -52,18 +52,59 @@ namespace FileHistoryStandalone
             else
             {
                 TsslStatus.Text = "正在打开存档库";
-                new Thread(() =>
+                Program.Repo = Repository.Open(Properties.Settings.Default.Repo.Trim());
+                Program.Repo.CopyMade += Repo_CopyMade;
+                Program.Repo.Renamed += Repo_Renamed;
+                Program.DocLib = new DocLibrary(Program.Repo)
                 {
-                    Program.Repo = Repository.Open(Properties.Settings.Default.Repo.Trim());
-                    Program.Repo.CopyMade += Repo_CopyMade;
-                    Program.Repo.Renamed += Repo_Renamed;
-                    Program.DocLib = new DocLibrary(Program.Repo)
-                    {
-                        Paths = Properties.Settings.Default.DocPath.Trim()
-                    };
-                    ScanLibAsync();
-                    menuStrip1.Invoke(new Action(() => 寻找版本FToolStripMenuItem.Enabled = true));
-                }).Start();
+                    Paths = Properties.Settings.Default.DocPath.Trim()
+                };
+                ScanLibAsync();
+            }
+            RefreshFileView(null);
+        }
+
+        private void RefreshFileView(string cd)
+        {
+            var ret = Program.Repo.ListDir(cd);
+            LvwFiles.BeginUpdate();
+            LvwFiles.Items.Clear();
+            ImlIcon.Images.Clear();
+            foreach (var i in ret)
+            {
+                if (File.Exists(i.Value))
+                {
+                    var info = new FileInfo(i.Value);
+                    var item = new ListViewItem(i.Key);
+                    item.SubItems.Add(info.Length.ToString());
+                    item.SubItems.Add(info.LastWriteTime.ToString());
+                    ImlIcon.Images.Add(Icon.ExtractAssociatedIcon(Program.NtPath(i.Value)));
+                    item.ImageIndex = ImlIcon.Images.Count - 1;
+                    item.Tag = i.Value;
+                    LvwFiles.Items.Add(item);
+                }
+                else if (Directory.Exists(i.Value))
+                {
+                    var info = new DirectoryInfo(i.Value);
+                    var item = new ListViewItem(i.Key);
+                    item.SubItems.Add("");
+                    item.SubItems.Add(info.LastWriteTime.ToString());
+                    //ImlIcon.Images.Add(Icon.ExtractAssociatedIcon(Program.NtPath( i.Value)));
+                    //item.ImageIndex = ImlIcon.Images.Count - 1;
+                    item.Tag = i.Value;
+                    LvwFiles.Items.Add(item);
+                }
+            }
+            LvwFiles.EndUpdate();
+            TxtPath.Text = cd;
+        }
+
+        private void LvwFiles_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            foreach (ListViewItem i in LvwFiles.SelectedItems)
+            {
+                RefreshFileView((string)i.Tag);
+                break;
             }
         }
 
@@ -166,25 +207,6 @@ namespace FileHistoryStandalone
             Exiting = true;
         }
 
-        private void 寻找版本FToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (OfdFind.ShowDialog() == DialogResult.OK)
-            {
-                TxtDoc.Text = OfdFind.FileName;
-                string file = OfdFind.FileName.Trim();
-                LvwFiles.BeginUpdate();
-                LvwFiles.Items.Clear();
-                foreach (var ver in Program.Repo.FindVersions(file))
-                {
-                    var it = new ListViewItem(Program.Repo.NameRepo2Time(ver).ToLocalTime().ToString());
-                    it.SubItems.Add(new FileInfo(ver).Length.ToString() + "字节");
-                    it.Tag = ver;
-                    LvwFiles.Items.Add(it);
-                }
-                LvwFiles.EndUpdate();
-            }
-        }
-
         private void TrimFinished()
         {
             TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 版本清理完成";
@@ -279,11 +301,6 @@ namespace FileHistoryStandalone
             }
         }
 
-        private void 隐藏HToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Hide();
-        }
-
         private void 重新配置RToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Reconfigure();
@@ -304,6 +321,13 @@ namespace FileHistoryStandalone
         {
             Exit();
             Close();
+        }
+
+        private void BtnUp_Click(object sender, EventArgs e)
+        {
+            string cd = TxtPath.Text;
+            if (cd.Contains(Path.DirectorySeparatorChar))
+                RefreshFileView(Path.GetDirectoryName(cd));
         }
     }
 }

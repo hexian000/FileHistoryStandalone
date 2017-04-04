@@ -87,7 +87,27 @@ namespace FileHistoryStandalone
             }
         }
 
-        public void Synchronize(string srcDir,CancellationToken cancel)
+        public List<KeyValuePair<string, string>> ListDir(string path)
+        {
+            var ret = new List<KeyValuePair<string, string>>();
+            if (path == null) path = RepoPath;
+            foreach (var dir in Directory.EnumerateDirectories(Win32Path(path)))
+            {
+                ret.Add(new KeyValuePair<string, string>(Path.GetFileName(dir), dir));
+            }
+            var hs = new HashSet<string>();
+            foreach (var file in Directory.EnumerateFiles(Win32Path(path)))
+            {
+                if (!hs.Contains(file.ToLowerInvariant()))
+                {
+                    hs.Add(file.ToLowerInvariant());
+                    ret.Add(new KeyValuePair<string, string>(NameRepo2Doc(Path.GetFileName(file)), file));
+                }
+            }
+            return ret;
+        }
+
+        public void Synchronize(string srcDir, CancellationToken cancel)
         {
             Dictionary<string, DateTime> repo = new Dictionary<string, DateTime>();
             string repoDir = PathDoc2Repo(srcDir);
@@ -313,7 +333,8 @@ namespace FileHistoryStandalone
         private string PathRepo2Doc(string fullName)
         {
             string name = NtPath(fullName);
-            return name.Substring(RepoPath.Length + 1, 1) + ':' + name.Substring(RepoPath.Length + 2);
+            int len = NtPath(RepoPath).Length;
+            return name.Substring(len + 1, 1) + ':' + name.Substring(len + 2);
         }
 
         public DateTime NameRepo2Time(string objName)

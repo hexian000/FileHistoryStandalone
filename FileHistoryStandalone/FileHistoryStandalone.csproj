@@ -74,6 +74,12 @@
     <Compile Include="FrmManager.Designer.cs">
       <DependentUpon>FrmManager.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrmVersion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmVersion.Designer.cs">
+      <DependentUpon>FrmVersion.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repository.cs" />
