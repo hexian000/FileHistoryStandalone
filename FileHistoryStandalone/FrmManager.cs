@@ -141,11 +141,16 @@ namespace FileHistoryStandalone
                     item.SubItems.Add(Program.FormatSize(info.Length));
                     item.SubItems.Add(Program.Repo.NameRepo2Time(i.Value).ToString());
                     string ext = Path.GetExtension(i.Value).ToLowerInvariant();
-                    if (!IconCache.TryGetValue(ext, out Icon icon))
+                    Icon icon;
+                    if (ext != ".exe" && ext != ".ico")
                     {
-                        icon = Icon.ExtractAssociatedIcon(Program.NtPath(filePath));
-                        IconCache[ext] = icon;
+                        if (!IconCache.TryGetValue(ext, out icon))
+                        {
+                            icon = Icon.ExtractAssociatedIcon(Program.NtPath(filePath));
+                            IconCache[ext] = icon;
+                        }
                     }
+                    else icon = Icon.ExtractAssociatedIcon(Program.NtPath(filePath));
                     ImlIcon.Images.Add(icon);
                     item.ImageIndex = ImlIcon.Images.Count - 1;
                     item.Tag = i.Value;
