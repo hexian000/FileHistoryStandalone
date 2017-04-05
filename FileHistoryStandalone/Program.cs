@@ -161,5 +161,10 @@ namespace FileHistoryStandalone
             else if (size < 1073741824) return (size / 1048576.0).ToString("G3") + " MB";
             else return (size / 1073741824.0).ToString("G3") + " GB";
         }
+
+        public static Version GetProgramVersion()
+        {
+            return new Version(2, 1, 8, 0);
+        }
     }
 }

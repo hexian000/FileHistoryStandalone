@@ -57,6 +57,8 @@
             this.仅保留最新版本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.BtnUp = new System.Windows.Forms.Button();
             this.TxtPath = new System.Windows.Forms.TextBox();
+            this.帮助HToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.关于AToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.StatusStripDefault.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
@@ -90,6 +92,7 @@
             this.columnHeader2,
             this.columnHeader3});
             this.LvwFiles.ContextMenuStrip = this.contextMenuStrip1;
+            this.LvwFiles.Enabled = false;
             this.LvwFiles.FullRowSelect = true;
             this.LvwFiles.Location = new System.Drawing.Point(12, 57);
             this.LvwFiles.MultiSelect = false;
@@ -185,7 +188,8 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.程序PToolStripMenuItem,
-            this.清理CToolStripMenuItem});
+            this.清理CToolStripMenuItem,
+            this.帮助HToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(526, 25);
@@ -205,19 +209,19 @@
             // 重新配置RToolStripMenuItem
             // 
             this.重新配置RToolStripMenuItem.Name = "重新配置RToolStripMenuItem";
-            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.重新配置RToolStripMenuItem.Text = "重新配置(&R)";
             this.重新配置RToolStripMenuItem.Click += new System.EventHandler(this.重新配置RToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(137, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // 退出XToolStripMenuItem
             // 
             this.退出XToolStripMenuItem.Name = "退出XToolStripMenuItem";
-            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.退出XToolStripMenuItem.Text = "退出(&X)";
             this.退出XToolStripMenuItem.Click += new System.EventHandler(this.退出XToolStripMenuItem_Click);
             // 
@@ -269,6 +273,22 @@
             this.TxtPath.ReadOnly = true;
             this.TxtPath.Size = new System.Drawing.Size(421, 21);
             this.TxtPath.TabIndex = 11;
+            this.TxtPath.Text = "\\";
+            // 
+            // 帮助HToolStripMenuItem
+            // 
+            this.帮助HToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.关于AToolStripMenuItem});
+            this.帮助HToolStripMenuItem.Name = "帮助HToolStripMenuItem";
+            this.帮助HToolStripMenuItem.Size = new System.Drawing.Size(61, 21);
+            this.帮助HToolStripMenuItem.Text = "帮助(&H)";
+            // 
+            // 关于AToolStripMenuItem
+            // 
+            this.关于AToolStripMenuItem.Name = "关于AToolStripMenuItem";
+            this.关于AToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.关于AToolStripMenuItem.Text = "关于(&A)...";
+            this.关于AToolStripMenuItem.Click += new System.EventHandler(this.关于AToolStripMenuItem_Click);
             // 
             // FrmManager
             // 
@@ -328,6 +348,8 @@
         private System.Windows.Forms.ImageList ImlIcon;
         private System.Windows.Forms.Button BtnUp;
         private System.Windows.Forms.TextBox TxtPath;
+        private System.Windows.Forms.ToolStripMenuItem 帮助HToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 关于AToolStripMenuItem;
     }
 }
 

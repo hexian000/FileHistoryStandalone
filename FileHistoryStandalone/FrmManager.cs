@@ -62,7 +62,6 @@ namespace FileHistoryStandalone
                 };
                 ScanLibAsync();
             }
-            RefreshFileView(@"\");
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -194,24 +193,45 @@ namespace FileHistoryStandalone
                     }
                     SfdSaveAs.FileName = it.Text;
                     if (SfdSaveAs.ShowDialog() == DialogResult.OK)
-                        Program.Repo.SaveAs(Program.Repo.RepositoryPath + ver, SfdSaveAs.FileName, true);
+                    {
+                        try
+                        {
+                            Program.Repo.SaveAs(Program.Repo.RepositoryPath + ver, SfdSaveAs.FileName, true);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Program.WriteDebugLog("WARNING", ex);
+                        }
+                    }
                     break;
                 }
         }
 
         private void 删除DToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("暂不支持此操作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            return;
             foreach (ListViewItem it in LvwFiles.SelectedItems)
                 if (it.Tag is string ver)
                 {
+                    if (ver.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                    {
+                        MessageBox.Show("您不能对文件夹执行此操作", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
                     if (MessageBox.Show(this, "确实要删除这个版本吗？", Application.ProductName,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                         MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        Program.Repo.DeleteVersion(ver);
-                        LvwFiles.Items.Remove(it);
+                        try
+                        {
+                            Program.Repo.DeleteVersion(Program.Repo.RepositoryPath + ver);
+                            LvwFiles.Items.Remove(it);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Program.WriteDebugLog("WARNING", ex);
+                        }
                     }
                     break;
                 }
@@ -219,12 +239,18 @@ namespace FileHistoryStandalone
 
         private void Repo_CopyMade(object sender, string e)
         {
-            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) => TsslStatus.Text = $"[{t:H:mm:ss}] 已备份 " + e), DateTime.Now);
+            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) =>
+            {
+                TsslStatus.Text = $"[{t:H:mm:ss}] 已备份 " + e;
+            }), DateTime.Now);
         }
 
         private void Repo_Renamed(object sender, string e)
         {
-            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) => TsslStatus.Text = $"[{t:H:mm:ss}] 重命名 " + e), DateTime.Now);
+            StatusStripDefault.BeginInvoke(new Action<DateTime>((t) =>
+            {
+                TsslStatus.Text = $"[{t:H:mm:ss}] 重命名 " + e;
+            }), DateTime.Now);
         }
 
         private bool Reconfigure()
@@ -259,7 +285,11 @@ namespace FileHistoryStandalone
                     cancelSrc = new CancellationTokenSource();
                 Program.DocLib.ScanLibrary(cancelSrc.Token);
                 if (!cancelSrc.Token.IsCancellationRequested)
-                    Invoke(new Action(() => TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成"));
+                    Invoke(new Action(() =>
+                    {
+                        TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成";
+                        RefreshFileView(@"\");
+                    }));
                 lock (synclock)
                 {
                     cancelSrc.Dispose();
@@ -292,6 +322,8 @@ namespace FileHistoryStandalone
         private void TrimFinished()
         {
             TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 版本清理完成";
+            RefreshFileView(@"\");
+            LvwFiles.Enabled = true;
         }
 
         private bool CheckBusy()
@@ -323,6 +355,7 @@ namespace FileHistoryStandalone
         {
             if (CheckBusy() && TrimPrompt())
             {
+                LvwFiles.Enabled = false;
                 worker = new Thread(() =>
                   {
                       lock (synclock)
@@ -345,6 +378,7 @@ namespace FileHistoryStandalone
 
             if (CheckBusy() && TrimPrompt())
             {
+                LvwFiles.Enabled = false;
                 worker = new Thread(() =>
                 {
                     lock (synclock)
@@ -366,6 +400,7 @@ namespace FileHistoryStandalone
         {
             if (CheckBusy() && TrimPrompt())
             {
+                LvwFiles.Enabled = false;
                 worker = new Thread(() =>
                 {
                     lock (synclock)
@@ -410,6 +445,12 @@ namespace FileHistoryStandalone
             string cd = TxtPath.Text;
             if (cd != Path.DirectorySeparatorChar.ToString())
                 RefreshFileView(Path.GetDirectoryName(cd));
+        }
+
+        private void 关于AToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var about = new FrmAbout();
+            about.ShowDialog(this);
         }
     }
 }
