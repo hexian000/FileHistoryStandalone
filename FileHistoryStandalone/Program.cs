@@ -17,12 +17,13 @@ namespace FileHistoryStandalone
         internal static DocLibrary DocLib = null;
         internal static string[] CommandLine;
 
-        internal static StreamWriter log = null;
+        private static object logLock = new object();
+        private static StreamWriter log = null;
         internal static void WriteDebugLog(string tag, object message)
         {
-            if (log == null) return;
-            lock (log)
+            lock (logLock)
             {
+                if (log == null) return;
                 log.Write($"{DateTime.Now.ToString("yyyyMMddHHmmss")}\t{tag}\t");
                 if (message is Exception ex)
                     log.WriteLine($"{ex.GetType().Name}: {ex.Message} {ex.StackTrace}");
@@ -33,6 +34,15 @@ namespace FileHistoryStandalone
                 else
                     log.WriteLine($"null");
                 log.Flush();
+            }
+        }
+
+        internal static void InitDebugLog(string path)
+        {
+            lock (logLock)
+            {
+                log?.Dispose();
+                log = new StreamWriter(new FileStream(path, FileMode.Create), Encoding.UTF8);
             }
         }
 
@@ -56,6 +66,11 @@ namespace FileHistoryStandalone
             //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
             Application.Run(new FrmManager());
+            lock (logLock)
+            {
+                log?.Dispose();
+                log = null;
+            }
         }
 
         private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
