@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("File History Standalone")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("https://github.com/hexian000/FileHistoryStandalone")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("File History Standalone")]
