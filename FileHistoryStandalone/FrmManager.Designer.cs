@@ -33,6 +33,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("请稍候...");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmManager));
             this.StatusStripDefault = new System.Windows.Forms.StatusStrip();
             this.TsslStatus = new System.Windows.Forms.ToolStripStatusLabel();
@@ -59,10 +60,10 @@
             this.删除已删除文件的备份ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除90天以前的版本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.仅保留最新版本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.BtnUp = new System.Windows.Forms.Button();
-            this.TxtPath = new System.Windows.Forms.TextBox();
             this.帮助HToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关于AToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.BtnUp = new System.Windows.Forms.Button();
+            this.TxtPath = new System.Windows.Forms.TextBox();
             this.StatusStripDefault.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
@@ -88,8 +89,8 @@
             // 
             // LvwFiles
             // 
-            this.LvwFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.LvwFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.LvwFiles.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
@@ -98,6 +99,8 @@
             this.LvwFiles.ContextMenuStrip = this.contextMenuStrip1;
             this.LvwFiles.Enabled = false;
             this.LvwFiles.FullRowSelect = true;
+            this.LvwFiles.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
+            listViewItem1});
             this.LvwFiles.Location = new System.Drawing.Point(12, 57);
             this.LvwFiles.MultiSelect = false;
             this.LvwFiles.Name = "LvwFiles";
@@ -213,19 +216,19 @@
             // 重新配置RToolStripMenuItem
             // 
             this.重新配置RToolStripMenuItem.Name = "重新配置RToolStripMenuItem";
-            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.重新配置RToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.重新配置RToolStripMenuItem.Text = "重新配置(&R)";
             this.重新配置RToolStripMenuItem.Click += new System.EventHandler(this.重新配置RToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(137, 6);
             // 
             // 退出XToolStripMenuItem
             // 
             this.退出XToolStripMenuItem.Name = "退出XToolStripMenuItem";
-            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.退出XToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.退出XToolStripMenuItem.Text = "退出(&X)";
             this.退出XToolStripMenuItem.Click += new System.EventHandler(this.退出XToolStripMenuItem_Click);
             // 
@@ -260,25 +263,6 @@
             this.仅保留最新版本ToolStripMenuItem.Text = "仅保留最新版本";
             this.仅保留最新版本ToolStripMenuItem.Click += new System.EventHandler(this.仅保留最新版本ToolStripMenuItem_Click);
             // 
-            // BtnUp
-            // 
-            this.BtnUp.Location = new System.Drawing.Point(439, 28);
-            this.BtnUp.Name = "BtnUp";
-            this.BtnUp.Size = new System.Drawing.Size(75, 23);
-            this.BtnUp.TabIndex = 10;
-            this.BtnUp.Text = "向上一级";
-            this.BtnUp.UseVisualStyleBackColor = true;
-            this.BtnUp.Click += new System.EventHandler(this.BtnUp_Click);
-            // 
-            // TxtPath
-            // 
-            this.TxtPath.Location = new System.Drawing.Point(12, 29);
-            this.TxtPath.Name = "TxtPath";
-            this.TxtPath.ReadOnly = true;
-            this.TxtPath.Size = new System.Drawing.Size(421, 21);
-            this.TxtPath.TabIndex = 11;
-            this.TxtPath.Text = "\\";
-            // 
             // 帮助HToolStripMenuItem
             // 
             this.帮助HToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -290,9 +274,31 @@
             // 关于AToolStripMenuItem
             // 
             this.关于AToolStripMenuItem.Name = "关于AToolStripMenuItem";
-            this.关于AToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.关于AToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             this.关于AToolStripMenuItem.Text = "关于(&A)...";
             this.关于AToolStripMenuItem.Click += new System.EventHandler(this.关于AToolStripMenuItem_Click);
+            // 
+            // BtnUp
+            // 
+            this.BtnUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BtnUp.Location = new System.Drawing.Point(439, 28);
+            this.BtnUp.Name = "BtnUp";
+            this.BtnUp.Size = new System.Drawing.Size(75, 23);
+            this.BtnUp.TabIndex = 10;
+            this.BtnUp.Text = "向上一级";
+            this.BtnUp.UseVisualStyleBackColor = true;
+            this.BtnUp.Click += new System.EventHandler(this.BtnUp_Click);
+            // 
+            // TxtPath
+            // 
+            this.TxtPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TxtPath.Location = new System.Drawing.Point(12, 29);
+            this.TxtPath.Name = "TxtPath";
+            this.TxtPath.ReadOnly = true;
+            this.TxtPath.Size = new System.Drawing.Size(421, 21);
+            this.TxtPath.TabIndex = 11;
+            this.TxtPath.Text = "\\";
             // 
             // FrmManager
             // 
