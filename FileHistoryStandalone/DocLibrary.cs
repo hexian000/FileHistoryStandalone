@@ -159,7 +159,9 @@ namespace FileHistoryStandalone
                         || e.ChangeType == WatcherChangeTypes.Changed)
                         {
                             Program.WriteDebugLog("INFO", $"Sync Copy {e.ChangeType}: {e.FullPath}");
-                            if (File.Exists(e.FullPath)) Repo.MakeCopy(e.FullPath);
+                            if (File.Exists(e.FullPath))
+                                try { Repo.MakeCopy(e.FullPath); }
+                                catch (Exception ex) { Program.WriteDebugLog("ERROR", ex); }
                         }
                         else if (e.ChangeType == WatcherChangeTypes.Renamed)
                         {
