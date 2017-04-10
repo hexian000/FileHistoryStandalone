@@ -117,7 +117,7 @@ namespace FileHistoryStandalone
                     var info = new FileInfo(filePath);
                     var item = new ListViewItem(i.Key);
                     item.SubItems.Add(Program.FormatSize(info.Length));
-                    item.SubItems.Add(Program.Repo.NameRepo2Time(i.Value).ToString());
+                    item.SubItems.Add(Program.Repo.NameRepo2Time(i.Value).ToLocalTime().ToString());
                     string ext = Path.GetExtension(i.Value).ToLowerInvariant();
                     Icon icon;
                     if (ext != ".exe" && ext != ".ico")
