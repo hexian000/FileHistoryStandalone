@@ -268,6 +268,7 @@ namespace FileHistoryStandalone
                     {
                         TsslStatus.Text = $"[{DateTime.Now:H:mm:ss}] 文档库扫描完成";
                         RefreshFileView(@"\");
+                        LvwFiles.Enabled = true;
                     }));
                 lock (synclock)
                 {
