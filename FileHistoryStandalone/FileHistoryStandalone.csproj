@@ -68,6 +68,12 @@
     <Compile Include="FrmConfig.Designer.cs">
       <DependentUpon>FrmConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrmExclude.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmExclude.Designer.cs">
+      <DependentUpon>FrmExclude.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrmManager.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,6 +91,9 @@
     <Compile Include="Repository.cs" />
     <EmbeddedResource Include="FrmConfig.resx">
       <DependentUpon>FrmConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmExclude.resx">
+      <DependentUpon>FrmExclude.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmManager.resx">
       <DependentUpon>FrmManager.cs</DependentUpon>
