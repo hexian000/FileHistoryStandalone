@@ -104,6 +104,12 @@ namespace FileHistoryStandalone {
 					if (cancel.IsCancellationRequested) return;
 				}
 			foreach (var doc in new DirectoryInfo(Win32Path(srcDir)).EnumerateFiles()) {
+                if (doc.Attributes.HasFlag(
+                    FileAttributes.Hidden 
+                    | FileAttributes.System 
+                    | FileAttributes.Temporary 
+                    | FileAttributes.SparseFile 
+                    | FileAttributes.ReparsePoint)) continue;
 				string id = doc.Name.ToLowerInvariant();
 				if (!IsExcluded(doc.Name))
 					if (repo.ContainsKey(id)) {
