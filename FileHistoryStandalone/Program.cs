@@ -111,7 +111,7 @@ namespace FileHistoryStandalone {
 				th = null;
 			} else msg = exception.ToString();
 			WriteDebugLog("BUGCHK", msg);
-			Program.log.Close();
+			Program.log?.Close();
 			MessageBox.Show("发生严重错误：" + msg + Environment.NewLine + "详细信息已复制到剪贴板", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
 			Environment.Exit(1);
 		}
@@ -169,7 +169,7 @@ namespace FileHistoryStandalone {
 		}
 
 		public static Version GetProgramVersion() {
-			return new Version(2, 2, 0, 0);
+			return new Version(2, 2, 0, 1);
 		}
 	}
 }

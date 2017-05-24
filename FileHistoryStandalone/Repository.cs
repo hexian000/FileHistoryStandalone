@@ -69,8 +69,8 @@ namespace FileHistoryStandalone {
 				attr.Attributes = attr.Attributes & ~FileAttributes.Archive | FileAttributes.ReadOnly;
 				CopyMade?.Invoke(this, source);
 			} catch (Exception ex) {
-				WriteDebugLog("FATAL", ex);
-				DoUnhandledException(ex);
+				WriteDebugLog("ERROR", ex);
+				//DoUnhandledException(ex);
 			}
 		}
 
