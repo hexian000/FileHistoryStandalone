@@ -45,7 +45,8 @@ namespace FileHistoryStandalone {
 				Program.Repo = Repository.Open(Properties.Settings.Default.Repo.Trim());
 				Program.Repo.CopyMade += Repo_CopyMade;
 				Program.Repo.Renamed += Repo_Renamed;
-				Program.DocLib = new DocLibrary(Program.Repo) {
+                Program.Excludes = Properties.Settings.Default.ExcludeRegex;
+                Program.DocLib = new DocLibrary(Program.Repo) {
 					Paths = Properties.Settings.Default.DocPath.Trim()
 				};
 				ScanLibAsync();

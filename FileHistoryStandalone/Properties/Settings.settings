@@ -11,5 +11,11 @@
     <Setting Name="Repo" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="ExcludeRegex" Type="System.String" Scope="User">
+      <Value Profile="(Default)">^Thumbs\.db$
+^desktop\.ini$
+\.tmp$
+^~.*\.docx$</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

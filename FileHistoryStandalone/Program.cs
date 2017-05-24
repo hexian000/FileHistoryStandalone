@@ -15,6 +15,8 @@ namespace FileHistoryStandalone {
 		internal static Repository Repo = null;
 		internal static DocLibrary DocLib = null;
 		internal static string[] CommandLine;
+		private static List<Regex> _excludes = new List<Regex>();
+
 		internal static string Excludes {
 			get {
 				StringBuilder sb = new StringBuilder();
@@ -31,7 +33,6 @@ namespace FileHistoryStandalone {
 				}
 			}
 		}
-		private static List<Regex> _excludes = new List<Regex>();
 
 		internal static bool IsExcluded(string name) => _excludes.Any((r) => r.IsMatch(name));
 
@@ -76,7 +77,6 @@ namespace FileHistoryStandalone {
 			//Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
 			//Application.ThreadException += Application_ThreadException;
 			//AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-			Excludes = @"^Thumbs\.db$";
 			Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
 			Application.Run(new FrmManager());
 			lock (logLock) {
