@@ -12,6 +12,8 @@ using static FileHistoryStandalone.Program;
 namespace FileHistoryStandalone {
     class Repository {
         private List<Regex> _excludes = new List<Regex>();
+        public IEnumerable<FileAttributes> ExcludeAttributes { get; set; } = new List<FileAttributes>();
+        public long ExcludeSize { get; set; }
 
         public string Excludes {
             get {
@@ -30,7 +32,17 @@ namespace FileHistoryStandalone {
             }
         }
 
-        private bool IsExcluded(string name) => _excludes.Any((r) => r.IsMatch(name));
+        public bool IsExcluded(string name) {
+            FileInfo fi = new FileInfo(name);
+            return _excludes.Any((r) => r.IsMatch(fi.Name))
+                 || (ExcludeAttributes.Any((x) => fi.Attributes.HasFlag(x)))
+                 || (ExcludeSize > 0 && fi.Length > ExcludeSize);
+        }
+        public bool IsExcluded(FileInfo fi) {
+            return _excludes.Any((r) => r.IsMatch(fi.Name))
+                 || (ExcludeAttributes.Any((x) => fi.Attributes.HasFlag(x)))
+                 || (ExcludeSize > 0 && fi.Length > ExcludeSize);
+        }
 
         private string RepoPath;
         public string RepositoryPath { get; private set; }
@@ -125,17 +137,12 @@ namespace FileHistoryStandalone {
                     if (cancel.IsCancellationRequested) return;
                 }
             foreach (var doc in new DirectoryInfo(Win32Path(srcDir)).EnumerateFiles()) {
-                if (doc.Attributes.HasFlag(
-                    FileAttributes.Hidden
-                    | FileAttributes.System
-                    | FileAttributes.Temporary
-                    | FileAttributes.SparseFile
-                    | FileAttributes.ReparsePoint)) continue;
-                string id = doc.Name.ToLowerInvariant();
-                if (!IsExcluded(doc.Name))
+                if (!IsExcluded(doc)) {
+                    string id = doc.Name.ToLowerInvariant();
                     if (repo.ContainsKey(id)) {
                         if (repo[id] < doc.LastWriteTimeUtc) MakeCopy(doc.FullName);
                     } else MakeCopy(doc.FullName);
+                }
                 if (cancel.IsCancellationRequested) return;
             }
         }

@@ -12,10 +12,13 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ExcludeRegex" Type="System.String" Scope="User">
-      <Value Profile="(Default)">^Thumbs\.db$
-^desktop\.ini$
-\.tmp$
-^~.*\.docx$</Value>
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ExcludeAttr" Type="System.String" Scope="User">
+      <Value Profile="(Default)">2,4,256,512,16384</Value>
+    </Setting>
+    <Setting Name="ExcludeSize" Type="System.Int64" Scope="User">
+      <Value Profile="(Default)">31457280</Value>
     </Setting>
   </Settings>
 </SettingsFile>

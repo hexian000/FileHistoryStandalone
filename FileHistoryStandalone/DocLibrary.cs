@@ -81,7 +81,7 @@ namespace FileHistoryStandalone {
 
 		private void Watcher_Changed(object sender, FileSystemEventArgs e) {
 			Program.WriteDebugLog("INFO", $"Watcher {e.ChangeType}: {e.FullPath}");
-			if (Program.IsExcluded(e.Name)) return;
+			if (Program.Repo.IsExcluded(e.FullPath)) return;
 			lock (OperBuff) {
 				bool found = false;
 				for (int j = 0; j < OperBuff.Count; j++) {
@@ -107,7 +107,7 @@ namespace FileHistoryStandalone {
 
 		private void Watcher_Renamed(object sender, RenamedEventArgs e) {
 			if (e.ChangeType != WatcherChangeTypes.Renamed) return;
-			if (Program.IsExcluded(e.Name)) return;
+			if (Program.Repo.IsExcluded(e.FullPath)) return;
 			lock (OperBuff) {
 				bool found = false;
 				for (int j = 0; j < OperBuff.Count; j++) {

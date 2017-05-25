@@ -25,17 +25,17 @@
 		private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmExclude));
             this.GrpByAttr = new System.Windows.Forms.GroupBox();
-            this.ChkSystem = new System.Windows.Forms.CheckBox();
-            this.ChkHidden = new System.Windows.Forms.CheckBox();
-            this.ChkTemp = new System.Windows.Forms.CheckBox();
-            this.ChkSparse = new System.Windows.Forms.CheckBox();
-            this.ChkReparse = new System.Windows.Forms.CheckBox();
-            this.ChkSize = new System.Windows.Forms.CheckBox();
-            this.TxtSize = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.TxtSize = new System.Windows.Forms.TextBox();
+            this.ChkSize = new System.Windows.Forms.CheckBox();
+            this.ChkEncrypted = new System.Windows.Forms.CheckBox();
+            this.ChkSparse = new System.Windows.Forms.CheckBox();
+            this.ChkTemp = new System.Windows.Forms.CheckBox();
+            this.ChkHidden = new System.Windows.Forms.CheckBox();
+            this.ChkSystem = new System.Windows.Forms.CheckBox();
             this.GrpByName = new System.Windows.Forms.GroupBox();
-            this.LblInfo = new System.Windows.Forms.Label();
             this.TxtExclude = new System.Windows.Forms.TextBox();
+            this.LblInfo = new System.Windows.Forms.Label();
             this.GrpByAttr.SuspendLayout();
             this.GrpByName.SuspendLayout();
             this.SuspendLayout();
@@ -47,7 +47,7 @@
             this.GrpByAttr.Controls.Add(this.label1);
             this.GrpByAttr.Controls.Add(this.TxtSize);
             this.GrpByAttr.Controls.Add(this.ChkSize);
-            this.GrpByAttr.Controls.Add(this.ChkReparse);
+            this.GrpByAttr.Controls.Add(this.ChkEncrypted);
             this.GrpByAttr.Controls.Add(this.ChkSparse);
             this.GrpByAttr.Controls.Add(this.ChkTemp);
             this.GrpByAttr.Controls.Add(this.ChkHidden);
@@ -59,41 +59,47 @@
             this.GrpByAttr.TabStop = false;
             this.GrpByAttr.Text = "按属性排除";
             // 
-            // ChkSystem
+            // label1
             // 
-            this.ChkSystem.AutoSize = true;
-            this.ChkSystem.Checked = true;
-            this.ChkSystem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ChkSystem.Location = new System.Drawing.Point(6, 20);
-            this.ChkSystem.Name = "ChkSystem";
-            this.ChkSystem.Size = new System.Drawing.Size(72, 16);
-            this.ChkSystem.TabIndex = 0;
-            this.ChkSystem.Text = "系统文件";
-            this.ChkSystem.UseVisualStyleBackColor = true;
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(270, 65);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(59, 12);
+            this.label1.TabIndex = 7;
+            this.label1.Text = "MB 的文件";
             // 
-            // ChkHidden
+            // TxtSize
             // 
-            this.ChkHidden.AutoSize = true;
-            this.ChkHidden.Checked = true;
-            this.ChkHidden.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ChkHidden.Location = new System.Drawing.Point(6, 64);
-            this.ChkHidden.Name = "ChkHidden";
-            this.ChkHidden.Size = new System.Drawing.Size(72, 16);
-            this.ChkHidden.TabIndex = 1;
-            this.ChkHidden.Text = "隐藏文件";
-            this.ChkHidden.UseVisualStyleBackColor = true;
+            this.TxtSize.Location = new System.Drawing.Point(221, 62);
+            this.TxtSize.Name = "TxtSize";
+            this.TxtSize.Size = new System.Drawing.Size(43, 21);
+            this.TxtSize.TabIndex = 6;
+            this.TxtSize.Text = "30";
             // 
-            // ChkTemp
+            // ChkSize
             // 
-            this.ChkTemp.AutoSize = true;
-            this.ChkTemp.Checked = true;
-            this.ChkTemp.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ChkTemp.Location = new System.Drawing.Point(6, 42);
-            this.ChkTemp.Name = "ChkTemp";
-            this.ChkTemp.Size = new System.Drawing.Size(72, 16);
-            this.ChkTemp.TabIndex = 2;
-            this.ChkTemp.Text = "临时文件";
-            this.ChkTemp.UseVisualStyleBackColor = true;
+            this.ChkSize.AutoSize = true;
+            this.ChkSize.Checked = true;
+            this.ChkSize.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ChkSize.Location = new System.Drawing.Point(169, 64);
+            this.ChkSize.Name = "ChkSize";
+            this.ChkSize.Size = new System.Drawing.Size(48, 16);
+            this.ChkSize.TabIndex = 5;
+            this.ChkSize.Text = "大于";
+            this.ChkSize.UseVisualStyleBackColor = true;
+            this.ChkSize.CheckedChanged += new System.EventHandler(this.ChkSize_CheckedChanged);
+            // 
+            // ChkEncrypted
+            // 
+            this.ChkEncrypted.AutoSize = true;
+            this.ChkEncrypted.Checked = true;
+            this.ChkEncrypted.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ChkEncrypted.Location = new System.Drawing.Point(169, 42);
+            this.ChkEncrypted.Name = "ChkEncrypted";
+            this.ChkEncrypted.Size = new System.Drawing.Size(72, 16);
+            this.ChkEncrypted.TabIndex = 4;
+            this.ChkEncrypted.Text = "加密文件";
+            this.ChkEncrypted.UseVisualStyleBackColor = true;
             // 
             // ChkSparse
             // 
@@ -107,46 +113,41 @@
             this.ChkSparse.Text = "稀疏文件";
             this.ChkSparse.UseVisualStyleBackColor = true;
             // 
-            // ChkReparse
+            // ChkTemp
             // 
-            this.ChkReparse.AutoSize = true;
-            this.ChkReparse.Checked = true;
-            this.ChkReparse.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ChkReparse.Location = new System.Drawing.Point(169, 42);
-            this.ChkReparse.Name = "ChkReparse";
-            this.ChkReparse.Size = new System.Drawing.Size(72, 16);
-            this.ChkReparse.TabIndex = 4;
-            this.ChkReparse.Text = "重解析点";
-            this.ChkReparse.UseVisualStyleBackColor = true;
+            this.ChkTemp.AutoSize = true;
+            this.ChkTemp.Checked = true;
+            this.ChkTemp.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ChkTemp.Location = new System.Drawing.Point(6, 42);
+            this.ChkTemp.Name = "ChkTemp";
+            this.ChkTemp.Size = new System.Drawing.Size(72, 16);
+            this.ChkTemp.TabIndex = 2;
+            this.ChkTemp.Text = "临时文件";
+            this.ChkTemp.UseVisualStyleBackColor = true;
             // 
-            // ChkSize
+            // ChkHidden
             // 
-            this.ChkSize.AutoSize = true;
-            this.ChkSize.Checked = true;
-            this.ChkSize.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ChkSize.Location = new System.Drawing.Point(169, 64);
-            this.ChkSize.Name = "ChkSize";
-            this.ChkSize.Size = new System.Drawing.Size(48, 16);
-            this.ChkSize.TabIndex = 5;
-            this.ChkSize.Text = "大于";
-            this.ChkSize.UseVisualStyleBackColor = true;
+            this.ChkHidden.AutoSize = true;
+            this.ChkHidden.Checked = true;
+            this.ChkHidden.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ChkHidden.Location = new System.Drawing.Point(6, 64);
+            this.ChkHidden.Name = "ChkHidden";
+            this.ChkHidden.Size = new System.Drawing.Size(72, 16);
+            this.ChkHidden.TabIndex = 1;
+            this.ChkHidden.Text = "隐藏文件";
+            this.ChkHidden.UseVisualStyleBackColor = true;
             // 
-            // TxtSize
+            // ChkSystem
             // 
-            this.TxtSize.Location = new System.Drawing.Point(221, 62);
-            this.TxtSize.Name = "TxtSize";
-            this.TxtSize.Size = new System.Drawing.Size(43, 21);
-            this.TxtSize.TabIndex = 6;
-            this.TxtSize.Text = "30";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(270, 65);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(59, 12);
-            this.label1.TabIndex = 7;
-            this.label1.Text = "MB 的文件";
+            this.ChkSystem.AutoSize = true;
+            this.ChkSystem.Checked = true;
+            this.ChkSystem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ChkSystem.Location = new System.Drawing.Point(6, 20);
+            this.ChkSystem.Name = "ChkSystem";
+            this.ChkSystem.Size = new System.Drawing.Size(72, 16);
+            this.ChkSystem.TabIndex = 0;
+            this.ChkSystem.Text = "系统文件";
+            this.ChkSystem.UseVisualStyleBackColor = true;
             // 
             // GrpByName
             // 
@@ -162,17 +163,6 @@
             this.GrpByName.TabStop = false;
             this.GrpByName.Text = "按名称排除";
             // 
-            // LblInfo
-            // 
-            this.LblInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.LblInfo.Location = new System.Drawing.Point(6, 17);
-            this.LblInfo.Name = "LblInfo";
-            this.LblInfo.Size = new System.Drawing.Size(424, 30);
-            this.LblInfo.TabIndex = 2;
-            this.LblInfo.Text = "如果文件名符合下列正则表达式，则排除：（一行一个，不区分大小写）";
-            this.LblInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // TxtExclude
             // 
             this.TxtExclude.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -184,6 +174,17 @@
             this.TxtExclude.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.TxtExclude.Size = new System.Drawing.Size(422, 58);
             this.TxtExclude.TabIndex = 3;
+            // 
+            // LblInfo
+            // 
+            this.LblInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.LblInfo.Location = new System.Drawing.Point(6, 17);
+            this.LblInfo.Name = "LblInfo";
+            this.LblInfo.Size = new System.Drawing.Size(424, 30);
+            this.LblInfo.TabIndex = 2;
+            this.LblInfo.Text = "如果文件名符合下列正则表达式，则排除：（一行一个，不区分大小写）";
+            this.LblInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // FrmExclude
             // 
@@ -215,7 +216,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox TxtSize;
         private System.Windows.Forms.CheckBox ChkSize;
-        private System.Windows.Forms.CheckBox ChkReparse;
+        private System.Windows.Forms.CheckBox ChkEncrypted;
         private System.Windows.Forms.GroupBox GrpByName;
         private System.Windows.Forms.TextBox TxtExclude;
         private System.Windows.Forms.Label LblInfo;
