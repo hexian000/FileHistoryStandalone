@@ -36,12 +36,14 @@ namespace FileHistoryStandalone {
             FileInfo fi = new FileInfo(name);
             return _excludes.Any((r) => r.IsMatch(fi.Name))
                  || (ExcludeAttributes.Any((x) => fi.Attributes.HasFlag(x)))
-                 || (ExcludeSize > 0 && fi.Length > ExcludeSize);
+                 || (ExcludeSize > 0 && fi.Length > ExcludeSize)
+                 || fi.Attributes.HasFlag(FileAttributes.ReparsePoint);
         }
         public bool IsExcluded(FileInfo fi) {
             return _excludes.Any((r) => r.IsMatch(fi.Name))
                  || (ExcludeAttributes.Any((x) => fi.Attributes.HasFlag(x)))
-                 || (ExcludeSize > 0 && fi.Length > ExcludeSize);
+                 || (ExcludeSize > 0 && fi.Length > ExcludeSize)
+                 || fi.Attributes.HasFlag(FileAttributes.ReparsePoint);
         }
 
         private string RepoPath;
