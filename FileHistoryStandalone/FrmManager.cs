@@ -45,14 +45,14 @@ namespace FileHistoryStandalone {
                 Program.Repo = Repository.Open(Properties.Settings.Default.Repo.Trim());
                 Program.Repo.CopyMade += Repo_CopyMade;
                 Program.Repo.Renamed += Repo_Renamed;
-                Program.Repo.Excludes = Properties.Settings.Default.ExcludeRegex;
-                Program.Repo.ExcludeAttributes = Properties.Settings.Default.ExcludeAttr.Split(',').Select((x) => int.Parse(x)).Cast<FileAttributes>();
-                Program.Repo.ExcludeSize = Properties.Settings.Default.ExcludeSize;
                 Program.DocLib = new DocLibrary(Program.Repo) {
                     Paths = Properties.Settings.Default.DocPath.Trim()
                 };
                 ScanLibAsync();
             }
+            Program.Repo.Excludes = Properties.Settings.Default.ExcludeRegex;
+            Program.Repo.ExcludeAttributes = Properties.Settings.Default.ExcludeAttr.Split(',').Select((x) => int.Parse(x)).Cast<FileAttributes>();
+            Program.Repo.ExcludeSize = Properties.Settings.Default.ExcludeSize;
             NicTray.Visible = true;
         }
 
