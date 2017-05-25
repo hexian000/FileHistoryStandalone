@@ -15,13 +15,13 @@ namespace FileHistoryStandalone {
         }
 
         private void FrmExclude_FormClosing(object sender, FormClosingEventArgs e) {
-            Program.Excludes = TxtExclude.Text;
+            Program.Repo.Excludes = TxtExclude.Text;
             Properties.Settings.Default.ExcludeRegex = TxtExclude.Text;
             Properties.Settings.Default.Save();
         }
 
         private void FrmExclude_Load(object sender, EventArgs e) {
-            TxtExclude.Text = Program.Excludes;
+            TxtExclude.Text = Program.Repo.Excludes;
         }
     }
 }

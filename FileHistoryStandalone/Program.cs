@@ -15,26 +15,6 @@ namespace FileHistoryStandalone {
 		internal static Repository Repo = null;
 		internal static DocLibrary DocLib = null;
 		internal static string[] CommandLine;
-		private static List<Regex> _excludes = new List<Regex>();
-
-		internal static string Excludes {
-			get {
-				StringBuilder sb = new StringBuilder();
-				foreach (var i in _excludes) {
-					sb.AppendLine(i.ToString());
-				}
-				return sb.ToString();
-			}
-			set {
-				_excludes.Clear();
-				foreach (var i in value.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)) {
-					if (i != "")
-						_excludes.Add(new Regex(i, RegexOptions.IgnoreCase));
-				}
-			}
-		}
-
-		internal static bool IsExcluded(string name) => _excludes.Any((r) => r.IsMatch(name));
 
 		private static object logLock = new object();
 		private static StreamWriter log = null;
