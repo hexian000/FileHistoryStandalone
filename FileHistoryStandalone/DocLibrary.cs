@@ -81,8 +81,9 @@ namespace FileHistoryStandalone {
 
 		private void Watcher_Changed(object sender, FileSystemEventArgs e) {
 			Program.WriteDebugLog("INFO", $"Watcher {e.ChangeType}: {e.FullPath}");
-			if (Program.Repo.IsExcluded(e.FullPath)) return;
-			lock (OperBuff) {
+            if (!File.Exists(e.FullPath)) return;
+            if (Program.Repo.IsExcluded(e.FullPath)) return;
+            lock (OperBuff) {
 				bool found = false;
 				for (int j = 0; j < OperBuff.Count; j++) {
 					var i = OperBuff[j];
