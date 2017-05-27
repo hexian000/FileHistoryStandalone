@@ -255,11 +255,11 @@ namespace FileHistoryStandalone {
             HashSet<string> ExcludeVer = new HashSet<string>();
             List<FileInfo> versions = new List<FileInfo>();
             foreach (var i in EnumerateTreeFiles(RepoPath)) {
-                if (!File.Exists(Win32Path(PathRepo2Doc(i.FullName))))
+                if (!File.Exists(Win32Path(PathNameRepo2Doc(i.FullName))))
                     orphan.Add(i);
                 else if (!orphanOnly) versions.Add(i);
-                string doc = PathRepo2Doc(i.FullName).ToLowerInvariant(); // NtPath
-                DateTime time = NameRepo2Time(i.FullName);
+                string doc = PathNameRepo2Doc(i.FullName).ToLowerInvariant(); // NtPath
+                DateTime time = NameRepo2Time(i.Name);
                 if (LatestWriteTime.TryGetValue(doc, out DateTime val)) {
                     if (time > val)
                         LatestWriteTime[doc] = time;
@@ -294,8 +294,8 @@ namespace FileHistoryStandalone {
                     }
             }
             orphan = null;
-            WriteDebugLog("INFO", "Trim: empty dirs");
-            TrimEmptyDirs(RepoPath);
+            //WriteDebugLog("INFO", "Trim: empty dirs");
+            //TrimEmptyDirs(RepoPath);
             WriteDebugLog("INFO", "Trim: done");
         }
 
@@ -333,6 +333,10 @@ namespace FileHistoryStandalone {
         public string NameRepo2Doc(string objName) {
             string name = Path.GetFileNameWithoutExtension(objName);
             return name.Substring(0, name.LastIndexOf('_')) + Path.GetExtension(objName);
+        }
+
+        public string PathNameRepo2Doc(string fullName) {
+            return Path.Combine(PathRepo2Doc(Path.GetDirectoryName(fullName)), NameRepo2Doc(fullName));
         }
     }
 }
