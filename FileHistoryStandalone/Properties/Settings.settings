@@ -12,7 +12,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ExcludeRegex" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">\.tmp$</Value>
     </Setting>
     <Setting Name="ExcludeAttr" Type="System.String" Scope="User">
       <Value Profile="(Default)">2,4,256,512,16384</Value>

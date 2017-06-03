@@ -61,7 +61,7 @@ namespace FileHistoryStandalone.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("\\.tmp$")]
         public string ExcludeRegex {
             get {
                 return ((string)(this["ExcludeRegex"]));
