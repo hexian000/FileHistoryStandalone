@@ -152,19 +152,22 @@ namespace FileHistoryStandalone
 			}
 		}
 
-		internal static void TrimEmptyDirs(string path)
+		internal static int TrimEmptyDirs(string path)
 		{
+			int count = 0;
 			try
 			{
-				bool empty = true;
-				foreach (var dir in Directory.EnumerateDirectories(path))
+				foreach (var dir in Directory.EnumerateFileSystemEntries(path))
 				{
-					TrimEmptyDirs(dir);
-					empty = false;
+					if (Directory.Exists(dir))
+						count += TrimEmptyDirs(dir);
+					else count++;
 				}
-				if (empty) Directory.Delete(path);
+				if (count == 0)
+					Directory.Delete(path);
 			}
 			catch (Exception ex) { WriteDebugLog("ERROR", ex); }
+			return count;
 		}
 
 		internal static string FormatSize(long size)

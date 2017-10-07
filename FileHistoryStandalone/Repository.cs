@@ -337,7 +337,7 @@ namespace FileHistoryStandalone
 			long lenTotal = 0;
 			foreach (var i in orphan.Concat(versions))
 			{
-				if (ExcludeVer.Contains(NtPath(i.FullName).ToLowerInvariant())) continue;
+				if (ExcludeVer.Contains(Win32Path(i.FullName).ToLowerInvariant())) continue;
 				if (deadline != null)
 					if (i.LastWriteTimeUtc >= deadline)
 						break;
@@ -354,8 +354,8 @@ namespace FileHistoryStandalone
 					}
 			}
 			orphan = null;
-			//WriteDebugLog("INFO", "Trim: empty dirs");
-			//TrimEmptyDirs(RepoPath);
+			WriteDebugLog("INFO", "Trim: empty dirs");
+			TrimEmptyDirs(RepoPath);
 			WriteDebugLog("INFO", "Trim: done");
 		}
 
