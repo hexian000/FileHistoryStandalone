@@ -180,7 +180,7 @@ namespace FileHistoryStandalone
 
 		public static Version GetProgramVersion()
 		{
-			return new Version(2, 2, 0, 1);
+			return new Version(2, 2, 0, 2);
 		}
 	}
 }
